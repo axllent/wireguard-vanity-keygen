@@ -26,7 +26,7 @@ func main() {
 
 	// set the default help
 	flag.Usage = func() {
-		fmt.Printf("Wireguard Vanity Key Generator (%s)\n\n", appVersion)
+		fmt.Printf("WireGuard Vanity Key Generator (%s)\n\n", appVersion)
 		// fmt.Printf("Version: %s\n\n", appVersion)
 		fmt.Printf("Usage: %s [OPTIONS] <SEARCH> [<SEARCH>...]\n\n", os.Args[0])
 		fmt.Println("Options:")
