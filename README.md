@@ -1,8 +1,8 @@
-# Wireguard vanity keygen
+# WireGuard vanity keygen
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/axllent/wireguard-vanity-keygen)](https://goreportcard.com/report/github.com/axllent/wireguard-vanity-keygen)
 
-A command-line vanity (public) key generator for [Wireguard](https://www.wireguard.com/). It only matches the prefix of generated public keys, and not whether the search matches anywhere in the public key. The concept is based on [wireguard-vanity-address](https://github.com/warner/wireguard-vanity-address), however I wanted something a little more streamlined.
+A command-line vanity (public) key generator for [WireGuard](https://www.wireguard.com/). It only matches the prefix of generated public keys, and not whether the search matches anywhere in the public key. The concept is based on [wireguard-vanity-address](https://github.com/warner/wireguard-vanity-address), however I wanted something a little more streamlined.
 
 
 ## Features
@@ -73,4 +73,4 @@ They are not and cannot be accurate. Keys are completely randomly generated, and
 
 ### Why do I need this?
 
-You don't. I wrote it because I run a Wireguard server, which does not provide any reference as to who the key belongs to (`wg` on the server). Using vanity keys, I can at least identify connections. I also wanted to learn more about multi-coe processing in Golang.
+You don't. I wrote it because I run a WireGuard server, which does not provide any reference as to who the key belongs to (`wg` on the server). Using vanity keys, I can at least identify connections. I also wanted to learn more about multi-coe processing in Golang.
