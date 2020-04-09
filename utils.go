@@ -16,6 +16,22 @@ func isValidSearch(s string) bool {
 
 // Returns a human-readable output of time.Duration
 func humanizeDuration(duration time.Duration) string {
+	// more than duration can handle
+	if duration.Hours() < 0.0 {
+		return fmt.Sprintf("hundreds of years")
+	}
+	if duration.Hours() > 8760.0 {
+		y := int64(duration.Hours() / 8760)
+		return fmt.Sprintf("%d %s", y, plural("year", y))
+	}
+	if duration.Hours() > 720.0 {
+		m := int64(duration.Hours() / 24 / 30)
+		return fmt.Sprintf("%d %s", m, plural("month", m))
+	}
+	if duration.Hours() > 168.0 {
+		w := int64(duration.Hours() / 168)
+		return fmt.Sprintf("%d %s", w, plural("week", w))
+	}
 	if duration.Seconds() < 60.0 {
 		s := int64(duration.Seconds())
 		return fmt.Sprintf("%d %s", s, plural("second", s))
@@ -30,6 +46,7 @@ func humanizeDuration(duration time.Duration) string {
 		return fmt.Sprintf("%d %s, %d %s",
 			h, plural("hour", h), m, plural("minute", m))
 	}
+	// if duration.Hours() <
 	h := int64(math.Mod(duration.Hours(), 24))
 	d := int64(duration.Hours() / 24)
 	return fmt.Sprintf("%d %s, %d %s",
