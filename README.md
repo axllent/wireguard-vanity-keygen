@@ -12,7 +12,7 @@ A command-line vanity (public) key generator for [WireGuard](https://www.wiregua
 - Optional case sensitive searching
 - Search multiple prefixes at once
 - Exit after results limit reached (defaults to 1)
-- Displays probablibilty and estimated runtime based on quick benchmark
+- Displays probability and estimated runtime based on quick benchmark
 
 
 ## Usage options
@@ -68,9 +68,9 @@ With case-insensitive searches (default), a-z have the chance of matching both u
 
 ### How accurate are the estimated times?
 
-They are not and cannot be accurate. Keys are completely randomly generated, and the estimate is based on a law of averages. For instance, you could find a match for a one in a billion chance on the very first hit, or it could take you 5 billion attempts. It will however give you an indication based on word count, case sensitivity, and use of numbers or characters.
+They are not (and cannot be) accurate. Keys are completely randomly generated, and the estimate is based on a law of averages. For instance, you could find a match for a one in a billion chance on the very first hit, or it could take you 5 billion attempts. It will however give you an indication based on your CPU speed, word count, case sensitivity, and use of numbers or characters.
 
 
 ### Why do I need this?
 
-You don't. I wrote it because I run a WireGuard server, which does not provide any reference as to who the key belongs to (`wg` on the server). Using vanity keys, I can at least identify connections. I also wanted to learn more about multi-coe processing in Golang.
+You don't. I wrote it because I run a WireGuard server, which does not provide any reference as to who the key belongs to (`wg` on the server). Using vanity keys, I can at least identify connections. I also wanted to learn more about multi-core processing in Golang.
