@@ -22,7 +22,7 @@ Usage: wireguard-vanity-keygen [OPTIONS] <SEARCH> [<SEARCH>...]
 
 Options:
   -c, --case-sensitive   case sensitive match (default false)
-  -t, --threads int      threads (default 4)
+  -t, --threads int      threads (defaults to all available cores minus 1)
   -l, --limit int        limit results to n (exists after) (default 1)
 ```
 
@@ -51,7 +51,7 @@ private 8IdcNsman/ZRGvqWzw1e5cRfhhdtAAmk02X9TkQxhHI=   public pC1/N8coOcXmcwO09Q
 ## Installing
 
 Download the [latest binary release](https://github.com/axllent/wireguard-vanity-keygen/releases/latest) for your system, 
-or build from source `go get -u github.com/axllent/wireguard-vanity-keygen`(go >= 1.11 required)
+or build from source `go install github.com/axllent/wireguard-vanity-keygen`.
 
 
 ## FAQ
