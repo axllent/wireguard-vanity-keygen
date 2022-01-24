@@ -22,7 +22,12 @@ func main() {
 	var userCores int
 
 	flag := pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
-	cores := runtime.NumCPU()
+	// detect number of cores minus one
+	cores := runtime.NumCPU() - 1
+	if cores == 0 {
+		// if it is single-code then it
+		cores = 1
+	}
 
 	// set the default help
 	flag.Usage = func() {
