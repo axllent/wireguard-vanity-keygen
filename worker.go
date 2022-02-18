@@ -1,4 +1,4 @@
-package main
+package keygen
 
 import (
 	"fmt"
@@ -7,13 +7,32 @@ import (
 	"time"
 )
 
-var (
-	wordMap  map[string]int
-	mapMutex = sync.RWMutex{}
-)
+type Options struct {
+	LimitResults  int
+	Threads       int
+	CaseSensitive bool
+	Cores         int
+}
+
+type Cruncher struct {
+	Options
+	WordMap  map[string]int
+	mapMutex sync.RWMutex
+	Thread   chan int
+	Stop     chan int
+}
+
+func New(options Options) *Cruncher {
+	return &Cruncher{
+		Options: options,
+		WordMap: make(map[string]int),
+		Thread:  make(chan int, options.Cores),
+		Stop:    make(chan int),
+	}
+}
 
 // Crunch will generate a new key and compare to the search(s)
-func Crunch() {
+func (c *Cruncher) Crunch() {
 	k, err := newPrivateKey()
 	if err != nil {
 		panic(err)
@@ -22,7 +41,7 @@ func Crunch() {
 	pub := k.Public().String()
 	matchKey := pub
 
-	if !caseSensitive {
+	if !c.CaseSensitive {
 		matchKey = strings.ToLower(pub)
 	}
 
@@ -32,30 +51,30 @@ func Crunch() {
 
 	// Allow only one routine at a time to avoid
 	// "concurrent map iteration and map write"
-	mapMutex.Lock()
-	defer mapMutex.Unlock()
-	for w, count := range wordMap {
+	c.mapMutex.Lock()
+	defer c.mapMutex.Unlock()
+	for w, count := range c.WordMap {
 		if count == 0 {
 			continue
 		}
 		completed = false
 		if strings.HasPrefix(matchKey, w) {
-			wordMap[w] = count - 1
+			c.WordMap[w] = count - 1
 			fmt.Printf("private %s   public %s\n", k.String(), pub)
 		}
 	}
 
 	if completed {
 		// send exit status, allows time for processes to exit
-		stopChan <- 1
+		c.Stop <- 1
 	}
 
-	<-threadChan // removes an int from threads, allowing another to proceed
+	<-c.Thread // removes an int from threads, allowing another to proceed
 }
 
 // CalculateSpeed returns average calculations per second based
 // on the time per run taken from 2 seconds runtime.
-func calculateSpeed() (int64, time.Duration) {
+func (c *Cruncher)CalculateSpeed() (int64, time.Duration) {
 	var n int64
 	n = 1
 	start := time.Now()
@@ -68,7 +87,7 @@ func calculateSpeed() (int64, time.Duration) {
 			}
 		}
 
-		threadChan <- 1 // will block if there is MAX ints in threads
+		c.Thread <- 1 // will block if there is MAX ints in threads
 		go func() {
 			// dry run
 			k, err := newPrivateKey()
@@ -80,12 +99,12 @@ func calculateSpeed() (int64, time.Duration) {
 
 			// Allow only one routine at a time to avoid
 			// "concurrent map iteration and map write"
-			mapMutex.Lock()
-			defer mapMutex.Unlock()
-			for w := range wordMap {
+			c.mapMutex.Lock()
+			defer c.mapMutex.Unlock()
+			for w := range c.WordMap {
 				_ = strings.HasPrefix(t, w)
 			}
-			<-threadChan // removes an int from threads, allowing another to proceed
+			<-c.Thread // removes an int from threads, allowing another to proceed
 			n++
 		}()
 	}
@@ -99,7 +118,7 @@ func calculateSpeed() (int64, time.Duration) {
 // can be found. Case-insensitive letter matches [a-z] can be
 // found in upper and lowercase combinations, so have a higher
 // chance of being found than [0-9], / or +, or case-sensitive matches.
-func calculateProbability(s string) int64 {
+func CalculateProbability(s string, caseSensitive bool) int64 {
 	var nonAlphaProbability, alphaProbability int64
 	alphaProbability = 26 + 10 + 2
 	nonAlphaProbability = 26 + 26 + 10 + 2
