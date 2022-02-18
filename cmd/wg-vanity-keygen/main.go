@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	options keygen.Options
-	appVersion    = "dev"
+	options    keygen.Options
+	appVersion = "dev"
 )
 
 func main() {
@@ -40,6 +40,8 @@ func main() {
 		os.Exit(0)
 	}
 
+	summary := true
+	flag.BoolVarP(&summary, "summary", "s", false, "print results when all are found (default false)")
 	flag.BoolVarP(&options.CaseSensitive, "case-sensitive", "c", false, "case sensitive match (default false)")
 	flag.IntVarP(&options.Threads, "threads", "t", options.Cores, "threads")
 	flag.IntVarP(&options.LimitResults, "limit", "l", 1, "limit results to n (exists after)")
@@ -84,7 +86,7 @@ func main() {
 		}
 		c.WordMap[sword] = options.LimitResults
 
-		probability := keygen.CalculateProbability(sword,options.CaseSensitive)
+		probability := keygen.CalculateProbability(sword, options.CaseSensitive)
 		estimate64 := int64(speed) * probability
 		estimate := time.Duration(estimate64)
 
@@ -93,15 +95,19 @@ func main() {
 	}
 
 	go func() {
-		_ = <-c.Stop
+		_ = <-c.Completed
 		time.Sleep(500 * time.Millisecond)
 		os.Exit(0)
 	}()
 
 	fmt.Printf("\nPress Ctrl-c to cancel\n\n")
-
-	for {
-		c.Thread <- 1 // will block if there is MAX ints in threads
-		go c.Crunch()
+	if summary {
+		c.Find(func(match keygen.Pair) {
+			fmt.Printf("private %s   public %s\n", match.Private, match.Public)
+		})
+	} else {
+		for _, match := range c.CollectToSlice() {
+			fmt.Printf("private %s   public %s\n", match.Private, match.Public)
+		}
 	}
 }

@@ -1,7 +1,6 @@
 package keygen
 
 import (
-	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -16,23 +15,29 @@ type Options struct {
 
 type Cruncher struct {
 	Options
-	WordMap  map[string]int
-	mapMutex sync.RWMutex
-	Thread   chan int
-	Stop     chan int
+	WordMap   map[string]int
+	mapMutex  sync.RWMutex
+	thread    chan int
+	Completed chan int
+	Abort     bool // set to true to abort processing
+}
+
+type Pair struct {
+	Private string
+	Public  string
 }
 
 func New(options Options) *Cruncher {
 	return &Cruncher{
-		Options: options,
-		WordMap: make(map[string]int),
-		Thread:  make(chan int, options.Cores),
-		Stop:    make(chan int),
+		Options:   options,
+		WordMap:   make(map[string]int),
+		thread:    make(chan int, options.Cores),
+		Completed: make(chan int),
 	}
 }
 
 // Crunch will generate a new key and compare to the search(s)
-func (c *Cruncher) Crunch() {
+func (c *Cruncher) crunch(cb func(match Pair)) {
 	k, err := newPrivateKey()
 	if err != nil {
 		panic(err)
@@ -60,21 +65,21 @@ func (c *Cruncher) Crunch() {
 		completed = false
 		if strings.HasPrefix(matchKey, w) {
 			c.WordMap[w] = count - 1
-			fmt.Printf("private %s   public %s\n", k.String(), pub)
+			cb(Pair{Private: k.String(), Public: pub})
 		}
 	}
 
 	if completed {
 		// send exit status, allows time for processes to exit
-		c.Stop <- 1
+		c.Completed <- 1
 	}
 
-	<-c.Thread // removes an int from threads, allowing another to proceed
+	<-c.thread // removes an int from threads, allowing another to proceed
 }
 
 // CalculateSpeed returns average calculations per second based
 // on the time per run taken from 2 seconds runtime.
-func (c *Cruncher)CalculateSpeed() (int64, time.Duration) {
+func (c *Cruncher) CalculateSpeed() (int64, time.Duration) {
 	var n int64
 	n = 1
 	start := time.Now()
@@ -87,7 +92,7 @@ func (c *Cruncher)CalculateSpeed() (int64, time.Duration) {
 			}
 		}
 
-		c.Thread <- 1 // will block if there is MAX ints in threads
+		c.thread <- 1 // will block if there is MAX ints in threads
 		go func() {
 			// dry run
 			k, err := newPrivateKey()
@@ -104,7 +109,7 @@ func (c *Cruncher)CalculateSpeed() (int64, time.Duration) {
 			for w := range c.WordMap {
 				_ = strings.HasPrefix(t, w)
 			}
-			<-c.Thread // removes an int from threads, allowing another to proceed
+			<-c.thread // removes an int from threads, allowing another to proceed
 			n++
 		}()
 	}
@@ -138,4 +143,24 @@ func CalculateProbability(s string, caseSensitive bool) int64 {
 	}
 
 	return p
+}
+
+// CollectToSlice will run till all the matching keys were calculated. This can take some time
+func (c *Cruncher) CollectToSlice() []Pair {
+	var matches []Pair
+	c.Find(func(match Pair) {
+		matches = append(matches, match)
+	})
+	return matches
+}
+
+// Find will invoke a callback function for each match to support some interactivity or at least feedback
+func (c *Cruncher) Find(cb func(match Pair)) {
+	for {
+		if c.Abort {
+			return
+		}
+		c.thread <- 1 // will block if there is MAX ints in threads
+		go c.crunch(cb)
+	}
 }
