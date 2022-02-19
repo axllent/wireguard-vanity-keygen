@@ -18,7 +18,6 @@ type Cruncher struct {
 	WordMap   map[string]int
 	mapMutex  sync.RWMutex
 	thread    chan int
-	Completed chan int
 	Abort     bool // set to true to abort processing
 }
 
@@ -32,12 +31,11 @@ func New(options Options) *Cruncher {
 		Options:   options,
 		WordMap:   make(map[string]int),
 		thread:    make(chan int, options.Cores),
-		Completed: make(chan int),
 	}
 }
 
 // Crunch will generate a new key and compare to the search(s)
-func (c *Cruncher) crunch(cb func(match Pair)) {
+func (c *Cruncher) crunch(cb func(match Pair)) bool {
 	k, err := newPrivateKey()
 	if err != nil {
 		panic(err)
@@ -69,12 +67,8 @@ func (c *Cruncher) crunch(cb func(match Pair)) {
 		}
 	}
 
-	if completed {
-		// send exit status, allows time for processes to exit
-		c.Completed <- 1
-	}
-
 	<-c.thread // removes an int from threads, allowing another to proceed
+	return completed
 }
 
 // CalculateSpeed returns average calculations per second based
@@ -157,10 +151,14 @@ func (c *Cruncher) CollectToSlice() []Pair {
 // Find will invoke a callback function for each match to support some interactivity or at least feedback
 func (c *Cruncher) Find(cb func(match Pair)) {
 	for {
+		c.thread <- 1 // will block if there is MAX ints in threads
+		go func() {
+			if c.crunch(cb) {
+				c.Abort = true
+			}
+		}()
 		if c.Abort {
 			return
 		}
-		c.thread <- 1 // will block if there is MAX ints in threads
-		go c.crunch(cb)
 	}
 }

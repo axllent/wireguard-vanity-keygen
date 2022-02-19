@@ -40,7 +40,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	summary := true
+	var summary bool
 	flag.BoolVarP(&summary, "summary", "s", false, "print results when all are found (default false)")
 	flag.BoolVarP(&options.CaseSensitive, "case-sensitive", "c", false, "case sensitive match (default false)")
 	flag.IntVarP(&options.Threads, "threads", "t", options.Cores, "threads")
@@ -94,14 +94,8 @@ func main() {
 			word, keygen.NumberFormat(probability), keygen.HumanizeDuration(estimate))
 	}
 
-	go func() {
-		_ = <-c.Completed
-		time.Sleep(500 * time.Millisecond)
-		os.Exit(0)
-	}()
-
 	fmt.Printf("\nPress Ctrl-c to cancel\n\n")
-	if summary {
+	if !summary {
 		c.Find(func(match keygen.Pair) {
 			fmt.Printf("private %s   public %s\n", match.Private, match.Public)
 		})
