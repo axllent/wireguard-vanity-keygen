@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.0.4]
+
+- Update core modules
+
+
 ## [0.0.3]
 
 - Update core modules
