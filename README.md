@@ -51,7 +51,7 @@ private 8IdcNsman/ZRGvqWzw1e5cRfhhdtAAmk02X9TkQxhHI=   public pC1/N8coOcXmcwO09Q
 ## Installing
 
 Download the [latest binary release](https://github.com/axllent/wireguard-vanity-keygen/releases/latest) for your system, 
-or build from source `go install github.com/axllent/wireguard-vanity-keygen`.
+or build from source `go install github.com/axllent/wireguard-vanity-keygen@latest`.
 
 
 ## FAQ
