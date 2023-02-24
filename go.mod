@@ -1,4 +1,4 @@
-module github.com/axllent/wireguard-vanity-keygen
+module github.com/shmul/wireguard-vanity-keygen
 
 go 1.17
 
