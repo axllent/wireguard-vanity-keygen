@@ -8,13 +8,13 @@ import (
 	"time"
 )
 
-// Checks the search does not contain any invalid characters
+// IsValidSearch checks the search does not contain any invalid characters
 func IsValidSearch(s string) bool {
 	var r = regexp.MustCompile(`[^a-zA-Z0-9\/\+]`)
 	return !r.MatchString(s)
 }
 
-// Returns a human-readable output of time.Duration
+// HumanizeDuration returns a human-readable output of time.Duration
 func HumanizeDuration(duration time.Duration) string {
 	// more than duration can handle
 	if duration.Hours() < 0.0 {
@@ -53,7 +53,7 @@ func HumanizeDuration(duration time.Duration) string {
 		d, Plural("day", d), h, Plural("hour", h))
 }
 
-// Returns a Plural of `s` if the value `v` is 0 or > 0
+// Plural returns a Plural of `s` if the value `v` is 0 or > 0
 func Plural(s string, v int64) string {
 	if v == 1 {
 		return s
@@ -62,7 +62,7 @@ func Plural(s string, v int64) string {
 	return s + "s"
 }
 
-// Returns a number-formatted string, eg: 1,123,456
+// NumberFormat returns a number-formatted string, eg: 1,123,456
 func NumberFormat(n int64) string {
 	in := strconv.FormatInt(n, 10)
 	numOfDigits := len(in)

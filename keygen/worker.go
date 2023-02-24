@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Options struct
 type Options struct {
 	LimitResults  int
 	Threads       int
@@ -13,24 +14,27 @@ type Options struct {
 	Cores         int
 }
 
+// Cruncher struct
 type Cruncher struct {
 	Options
-	WordMap   map[string]int
-	mapMutex  sync.RWMutex
-	thread    chan int
-	Abort     bool // set to true to abort processing
+	WordMap  map[string]int
+	mapMutex sync.RWMutex
+	thread   chan int
+	Abort    bool // set to true to abort processing
 }
 
+// Pair struct
 type Pair struct {
 	Private string
 	Public  string
 }
 
+// New returns a Cruncher
 func New(options Options) *Cruncher {
 	return &Cruncher{
-		Options:   options,
-		WordMap:   make(map[string]int),
-		thread:    make(chan int, options.Cores),
+		Options: options,
+		WordMap: make(map[string]int),
+		thread:  make(chan int, options.Cores),
 	}
 }
 

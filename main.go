@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/shmul/wireguard-vanity-keygen"
+	"github.com/axllent/wireguard-vanity-keygen/keygen"
 	"github.com/spf13/pflag"
 )
 
