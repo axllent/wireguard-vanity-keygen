@@ -1,4 +1,4 @@
-package main
+package keygen
 
 import (
 	"fmt"
@@ -8,53 +8,53 @@ import (
 	"time"
 )
 
-// Checks the search does not contain any invalid characters
-func isValidSearch(s string) bool {
+// IsValidSearch checks the search does not contain any invalid characters
+func IsValidSearch(s string) bool {
 	var r = regexp.MustCompile(`[^a-zA-Z0-9\/\+]`)
 	return !r.MatchString(s)
 }
 
-// Returns a human-readable output of time.Duration
-func humanizeDuration(duration time.Duration) string {
+// HumanizeDuration returns a human-readable output of time.Duration
+func HumanizeDuration(duration time.Duration) string {
 	// more than duration can handle
 	if duration.Hours() < 0.0 {
 		return fmt.Sprintf("hundreds of years")
 	}
 	if duration.Hours() > 8760.0 {
 		y := int64(duration.Hours() / 8760)
-		return fmt.Sprintf("%d %s", y, plural("year", y))
+		return fmt.Sprintf("%d %s", y, Plural("year", y))
 	}
 	if duration.Hours() > 720.0 {
 		m := int64(duration.Hours() / 24 / 30)
-		return fmt.Sprintf("%d %s", m, plural("month", m))
+		return fmt.Sprintf("%d %s", m, Plural("month", m))
 	}
 	if duration.Hours() > 168.0 {
 		w := int64(duration.Hours() / 168)
-		return fmt.Sprintf("%d %s", w, plural("week", w))
+		return fmt.Sprintf("%d %s", w, Plural("week", w))
 	}
 	if duration.Seconds() < 60.0 {
 		s := int64(duration.Seconds())
-		return fmt.Sprintf("%d %s", s, plural("second", s))
+		return fmt.Sprintf("%d %s", s, Plural("second", s))
 	}
 	if duration.Minutes() < 60.0 {
 		m := int64(duration.Minutes())
-		return fmt.Sprintf("%d %s", m, plural("minute", m))
+		return fmt.Sprintf("%d %s", m, Plural("minute", m))
 	}
 	if duration.Hours() < 24.0 {
 		m := int64(math.Mod(duration.Minutes(), 60))
 		h := int64(duration.Hours())
 		return fmt.Sprintf("%d %s, %d %s",
-			h, plural("hour", h), m, plural("minute", m))
+			h, Plural("hour", h), m, Plural("minute", m))
 	}
 	// if duration.Hours() <
 	h := int64(math.Mod(duration.Hours(), 24))
 	d := int64(duration.Hours() / 24)
 	return fmt.Sprintf("%d %s, %d %s",
-		d, plural("day", d), h, plural("hour", h))
+		d, Plural("day", d), h, Plural("hour", h))
 }
 
-// Returns a plural of `s` if the value `v` is 0 or > 0
-func plural(s string, v int64) string {
+// Plural returns a Plural of `s` if the value `v` is 0 or > 0
+func Plural(s string, v int64) string {
 	if v == 1 {
 		return s
 	}
@@ -62,8 +62,8 @@ func plural(s string, v int64) string {
 	return s + "s"
 }
 
-// Returns a number-formatted string, eg: 1,123,456
-func numberFormat(n int64) string {
+// NumberFormat returns a number-formatted string, eg: 1,123,456
+func NumberFormat(n int64) string {
 	in := strconv.FormatInt(n, 10)
 	numOfDigits := len(in)
 	if n < 0 {
