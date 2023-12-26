@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.0.6]
+
+- Update core modules
+
+
 ## [0.0.5]
 
 - Allow for inclusion as a module (see #2)
