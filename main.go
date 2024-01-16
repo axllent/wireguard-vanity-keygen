@@ -80,7 +80,7 @@ func main() {
 			sword = strings.ToLower(sword)
 		}
 		if !keygen.IsValidSearch(sword) {
-			fmt.Printf("\n\"%s\" contains invalid characaters\n", word)
+			fmt.Printf("\n\"%s\" contains invalid characters\n", word)
 			fmt.Println("Valid characters include letters [a-z], numbers [0-9], + and /")
 			os.Exit(2)
 		}

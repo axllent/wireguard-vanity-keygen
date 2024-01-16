@@ -1,3 +1,4 @@
+// Package keygen is a library to generate keys
 package keygen
 
 import (
@@ -11,7 +12,7 @@ import (
 const KeySize = 32
 
 // Key is curve25519 key.
-// It is used by WireGuard to represent public and preshared keys.
+// It is used by WireGuard to represent public and pre-shared keys.
 type Key [KeySize]byte
 
 // PrivateKey is curve25519 key.
@@ -21,7 +22,7 @@ type PrivateKey [KeySize]byte
 // NewPrivateKey generates a new curve25519 secret key.
 // It conforms to the format described on https://cr.yp.to/ecdh.html.
 func newPrivateKey() (PrivateKey, error) {
-	k, err := newPresharedKey()
+	k, err := newPreSharedKey()
 	if err != nil {
 		return PrivateKey{}, err
 	}
@@ -30,8 +31,8 @@ func newPrivateKey() (PrivateKey, error) {
 	return (PrivateKey)(*k), nil
 }
 
-// NewPresharedKey generates a new key
-func newPresharedKey() (*Key, error) {
+// NewPreSharedKey generates a new key
+func newPreSharedKey() (*Key, error) {
 	var k [KeySize]byte
 	_, err := rand.Read(k[:])
 	if err != nil {
