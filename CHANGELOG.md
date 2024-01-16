@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.7]
+
+- Add Github actions for releases & updates
+- Update library function naming
+- Update Go modules
+- Remove Makefile (#3)
+
+
 ## [0.0.6]
 
 - Update core modules
