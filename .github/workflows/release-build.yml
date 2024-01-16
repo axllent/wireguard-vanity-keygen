@@ -1,0 +1,37 @@
+on:
+  release:
+    types: [created]
+
+name: Build & release
+jobs:
+  releases-matrix:
+    name: Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, windows, darwin]
+        goarch: ["386", amd64, arm, arm64]
+        exclude:
+          - goarch: "386"
+            goos: darwin
+          - goarch: arm
+            goos: darwin
+          - goarch: arm
+            goos: windows
+    steps:
+    - uses: actions/checkout@v4
+
+    # build the binaries
+    - uses: wangyoucao577/go-release-action@v1.41
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        binary_name: "wireguard-vanity-keygen"
+        pre_command: export CGO_ENABLED=0
+        asset_name: wireguard-vanity-keygen-${{ matrix.goos }}-${{ matrix.goarch }}
+        extra_files: LICENSE README.md
+        md5sum: false
+        overwrite: true
+        retry: 5
+        ldflags: -w -X "main.appVersion=${{ github.ref_name }}"
