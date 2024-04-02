@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.8]
+
+- Update Go modules
+- Update Github workflow versions
+
+
 ## [0.0.7]
 
 - Add Github actions for releases & updates
@@ -10,7 +16,7 @@
 
 ## [0.0.6]
 
-- Update core modules
+- Update Go modules
 
 
 ## [0.0.5]
@@ -20,12 +26,12 @@
 
 ## [0.0.4]
 
-- Update core modules
+- Update Go modules
 
 
 ## [0.0.3]
 
-- Update core modules
+- Update Go modules
 - Set default cores to all available minus 1
 
 
