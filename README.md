@@ -49,10 +49,10 @@ private 8IdcNsman/ZRGvqWzw1e5cRfhhdtAAmk02X9TkQxhHI=   public pC1/N8coOcXmcwO09Q
 ```
 
 
-# Timings
+## Timings
 
 To give you a rough idea of how long it will take to generate keys, the following table lists
-estimated timings for each match on a system that reported 230,000 calculations per second using 19 CPU cores:
+estimated timings for each match on a system that reported  "`Calculating speed: 230,000 calculations per second using 19 CPU cores`" when it started:
 
 | Length  | Case-insensitive | Case-sensitive |
 | :------ | :--------------- | :------------- |
