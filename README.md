@@ -48,6 +48,30 @@ private wNuHOKCfoH1emfvijXNBoc/7KjrEXUeof7tSdGWvRFo=   public PC1/jXQosaBad2HePO
 private 8IdcNsman/ZRGvqWzw1e5cRfhhdtAAmk02X9TkQxhHI=   public pC1/N8coOcXmcwO09QXxLrF5/BoHQfvp/qsysGPXiw0=
 ```
 
+
+## Timings
+
+To give you a rough idea of how long it will take to generate keys, the following table lists
+estimated timings for each match on a system that reported  "`Calculating speed: 230,000 calculations per second using 19 CPU cores`" when it started:
+
+| Length  | Case-insensitive | Case-sensitive |
+| :------ | :--------------- | :------------- |
+| 3 chars | 0 seconds        | 1 second       |
+| 4 chars | 9 seconds        | 1 minute       |
+| 5 chars | 5 minutes        | 1.25 hours     |
+| 6 chars | 4 hours          | 3.5 days       |
+| 7 chars | 6 days           | 7 months       |
+| 8 chars | 7 months         | 38 years       |
+| 9 chars | 22 years         | 175 years      |
+
+Note that the above timings are for finding a result for any search term. 
+Passing multiple search terms will not substantially increase the time, 
+but increasing the limit to two (`--limit 2`) will double the estimated time, three will triple the time, etc.
+
+If any search term contains numbers, the timings would fall somewhere between the case-insensitive and case-sensitive columns.
+
+Of course, your mileage will differ, depending on the number, and speed, of your CPU cores.
+
 ## Installing
 
 Download the [latest binary release](https://github.com/axllent/wireguard-vanity-keygen/releases/latest) for your system, 
