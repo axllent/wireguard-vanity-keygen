@@ -1,6 +1,7 @@
 package keygen
 
 import (
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -17,10 +18,12 @@ type Options struct {
 // Cruncher struct
 type Cruncher struct {
 	Options
-	WordMap  map[string]int
-	mapMutex sync.RWMutex
-	thread   chan int
-	Abort    bool // set to true to abort processing
+	WordMap        map[string]int
+	mapMutex       sync.RWMutex
+	RegexpMap      map[*regexp.Regexp]int
+	regexpMapMutex sync.RWMutex
+	thread         chan int
+	Abort          bool // set to true to abort processing
 }
 
 // Pair struct
@@ -32,9 +35,10 @@ type Pair struct {
 // New returns a Cruncher
 func New(options Options) *Cruncher {
 	return &Cruncher{
-		Options: options,
-		WordMap: make(map[string]int),
-		thread:  make(chan int, options.Cores),
+		Options:   options,
+		WordMap:   make(map[string]int),
+		RegexpMap: make(map[*regexp.Regexp]int),
+		thread:    make(chan int, options.Cores),
 	}
 }
 
@@ -58,16 +62,33 @@ func (c *Cruncher) crunch(cb func(match Pair)) bool {
 
 	// Allow only one routine at a time to avoid
 	// "concurrent map iteration and map write"
-	c.mapMutex.Lock()
-	defer c.mapMutex.Unlock()
-	for w, count := range c.WordMap {
-		if count == 0 {
-			continue
+	if len(c.WordMap) > 0 {
+		c.mapMutex.Lock()
+		defer c.mapMutex.Unlock()
+		for w, count := range c.WordMap {
+			if count == 0 {
+				continue
+			}
+			completed = false
+			if strings.HasPrefix(matchKey, w) {
+				c.WordMap[w] = count - 1
+				cb(Pair{Private: k.String(), Public: pub})
+			}
 		}
-		completed = false
-		if strings.HasPrefix(matchKey, w) {
-			c.WordMap[w] = count - 1
-			cb(Pair{Private: k.String(), Public: pub})
+	}
+
+	if len(c.RegexpMap) > 0 {
+		c.regexpMapMutex.Lock()
+		defer c.regexpMapMutex.Unlock()
+		for w, count := range c.RegexpMap {
+			if count == 0 {
+				continue
+			}
+			completed = false
+			if w.MatchString(matchKey) {
+				c.RegexpMap[w] = count - 1
+				cb(Pair{Private: k.String(), Public: pub})
+			}
 		}
 	}
 
@@ -102,11 +123,22 @@ func (c *Cruncher) CalculateSpeed() (int64, time.Duration) {
 
 			// Allow only one routine at a time to avoid
 			// "concurrent map iteration and map write"
-			c.mapMutex.Lock()
-			defer c.mapMutex.Unlock()
-			for w := range c.WordMap {
-				_ = strings.HasPrefix(t, w)
+			if len(c.WordMap) > 0 {
+				c.mapMutex.Lock()
+				defer c.mapMutex.Unlock()
+				for w := range c.WordMap {
+					_ = strings.HasPrefix(t, w)
+				}
 			}
+
+			if len(c.RegexpMap) > 0 {
+				c.regexpMapMutex.Lock()
+				defer c.regexpMapMutex.Unlock()
+				for w := range c.RegexpMap {
+					_ = w.MatchString(t)
+				}
+			}
+
 			<-c.thread // removes an int from threads, allowing another to proceed
 			n++
 		}()

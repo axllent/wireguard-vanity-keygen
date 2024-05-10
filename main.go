@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -79,19 +80,28 @@ func main() {
 		if !options.CaseSensitive {
 			sword = strings.ToLower(sword)
 		}
-		if !keygen.IsValidSearch(sword) {
+		stripped := keygen.RemoveMetacharacters(sword)
+		if !keygen.IsValidSearch(stripped) {
 			fmt.Printf("\n\"%s\" contains invalid characters\n", word)
 			fmt.Println("Valid characters include letters [a-z], numbers [0-9], + and /")
 			os.Exit(2)
 		}
-		c.WordMap[sword] = options.LimitResults
-
-		probability := keygen.CalculateProbability(sword, options.CaseSensitive)
+		if stripped != sword {
+			regex := regexp.MustCompile(sword)
+			c.RegexpMap[regex] = options.LimitResults
+		} else {
+			c.WordMap[sword] = options.LimitResults
+		}
+		probability := keygen.CalculateProbability(stripped, options.CaseSensitive)
 		estimate64 := int64(speed) * probability
 		estimate := time.Duration(estimate64)
 
-		fmt.Printf("Probability for \"%s\": 1 in %s (approx %s per match)\n",
-			word, keygen.NumberFormat(probability), keygen.HumanizeDuration(estimate))
+		comment := ""
+		if len(stripped) != len(sword) {
+			comment = fmt.Sprintf(" (approximation may be wildly off, as '%s' is test string)", stripped)
+		}
+		fmt.Printf("Probability for \"%s\": 1 in %s (approx %s per match)%s\n",
+			word, keygen.NumberFormat(probability), keygen.HumanizeDuration(estimate), comment)
 	}
 
 	fmt.Printf("\nPress Ctrl-c to cancel\n\n")

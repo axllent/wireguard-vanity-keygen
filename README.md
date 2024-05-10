@@ -10,6 +10,7 @@ A command-line vanity (public) key generator for [WireGuard](https://www.wiregua
 - Generates compliant [curve25519](https://cr.yp.to/ecdh.html) private and public keys
 - Configurable multi-core processing (defaults to all cores)
 - Optional case sensitive searching
+- Optional regex searching
 - Search multiple prefixes at once
 - Exit after results limit reached (defaults to 1)
 - Displays probability and estimated runtime based on quick benchmark
@@ -30,11 +31,12 @@ Options:
 ## Example
 
 ```
-$ wireguard-vanity-keygen -l 4 test pc1/ 
+$ wireguard-vanity-keygen -l 3 test pc1/ "^(abc|def)"
 Calculating speed: 49,950 calculations per second using 4 CPU cores
 Case-insensitive search, exiting after 4 results
 Probability for "test": 1 in 2,085,136 (approx 41 seconds per match)
 Probability for "pc1/": 1 in 5,914,624 (approx 1 minute per match)
+Probability for "^(abc|def)": 1 in 3,010,936,384 (approx 3 hours, 40 minutes per match) (approximation may be wildly off, as 'abcdef' is test string)
 
 Press Ctrl-c to cancel
 
@@ -42,10 +44,11 @@ private OFVUjUoTNQp94fNPB9GCLzxiJPTbN03rcDPrVd12uFc=   public tEstMXL/3ZzAd2TnVl
 private gInIEDmENYbyuaWR1W/KLfximExwbcCg45W2WOmEc0I=   public TestKmA/XVagDW/JsHBXk5mhYJ6E1N1lAWeIeCttgRs=
 private yDQLNiQlfnMGhUBsbLQjoBbuNezyHug31Qa1Ht6cgkw=   public PC1/3oUId241TLYImJLUObR8NNxz4HXzG4z+EazfWxY=
 private +CUqn4jcKoL8pw53pD4IzfMKW/IMceDWKcM2W5Dxtn4=   public teStmGXZwiJl9HmfnTSmk83girtiIH8oZEa6PFJ8F1Y=
-private 2G0X+IvBLw3NRfRnHb8diIXp96NQ9wSu4gdqPidy3nw=   public tESt3DBU40Q/Zkp0d1aeb6HOgEOsEM3BxzNqLckKhhc=
 private EMaUfQvAEABpQV/21ALJP5YtyGerRXAn8u67j2AQzVs=   public pC1/t2x5V99Y1SBqNgPZDPsa6r+L5y3BJ4XUCJMar3g=
 private wNuHOKCfoH1emfvijXNBoc/7KjrEXUeof7tSdGWvRFo=   public PC1/jXQosaBad2HePOm/w1KjCZ82eT3qNbfzNDZiwTs=
-private 8IdcNsman/ZRGvqWzw1e5cRfhhdtAAmk02X9TkQxhHI=   public pC1/N8coOcXmcwO09QXxLrF5/BoHQfvp/qsysGPXiw0=
+private ACcI8j3TfWtGtZIqaf8a6qAxUx5fcuROMls2HRR3yGs=   public AbcP+qWv8OtXGHW2s2xWi8/uMNU7PxyDJZWcb0kQ5Ds=
+private KLBbXjsdWoF+FKVzTsJh//90rNxrUeBAxw5b4CaXDXI=   public DEfYIHnja/EP4KYcvwdbQcu03ITMXIHLoeC3d0ppkAw=
+private 0DB5zytfbxDs/fo0wmZBO12KbfeSTmxUD8S9ZQUXpWg=   public defP6d76lpIGu6aoBjKza16dZKirr5yzr5SKqihx2xw=
 ```
 
 
@@ -70,6 +73,8 @@ but increasing the limit to two (`--limit 2`) will double the estimated time, th
 
 If any search term contains numbers, the timings would fall somewhere between the case-insensitive and case-sensitive columns.
 
+Most regex expressions that include the pipe character (`|`), such as `^(abc|def)`, will cause the calculation to be wildly off.
+
 Of course, your mileage will differ, depending on the number, and speed, of your CPU cores.
 
 ## Installing
@@ -84,6 +89,7 @@ or build from source `go install github.com/axllent/wireguard-vanity-keygen@late
 
 Valid characters include `A-Z`, `a-z`, `0-9`, `/` and `+`. There are no other characters in a hash.
 
+You can also use regex expressions to search.
 
 ### Why does `test` & `tes1` show different probabilities despite having 4 characters each?
 

@@ -5,8 +5,13 @@ import (
 	"math"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
+
+// regexChars contains the list of regex metacharacters, excluding +,
+// which is valid in a key
+const regexChars = `^$.|?*-[]{}()\`
 
 // IsValidSearch checks the search does not contain any invalid characters
 func IsValidSearch(s string) bool {
@@ -86,4 +91,20 @@ func NumberFormat(n int64) string {
 			out[j] = ','
 		}
 	}
+}
+
+func RemoveMetacharacters(s string) string {
+	if !strings.ContainsAny(s, regexChars) {
+		return s
+	}
+	// remove (?i)
+	re1 := regexp.MustCompile(`^\([^)]*\)`)
+	s = re1.ReplaceAllLiteralString(s, "")
+	// replace [a-b]+ with a
+	re2 := regexp.MustCompile(`\[[^]]*\]\+?`)
+	s = re2.ReplaceAllLiteralString(s, "a")
+	for _, rune1 := range []rune(regexChars) {
+		s = strings.ReplaceAll(s, string(rune1), "")
+	}
+	return s
 }
