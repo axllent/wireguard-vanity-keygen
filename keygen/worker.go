@@ -64,7 +64,6 @@ func (c *Cruncher) crunch(cb func(match Pair)) bool {
 	// "concurrent map iteration and map write"
 	if len(c.WordMap) > 0 {
 		c.mapMutex.Lock()
-		defer c.mapMutex.Unlock()
 		for w, count := range c.WordMap {
 			if count == 0 {
 				continue
@@ -75,11 +74,11 @@ func (c *Cruncher) crunch(cb func(match Pair)) bool {
 				cb(Pair{Private: k.String(), Public: pub})
 			}
 		}
+		c.mapMutex.Unlock()
 	}
 
 	if len(c.RegexpMap) > 0 {
 		c.regexpMapMutex.Lock()
-		defer c.regexpMapMutex.Unlock()
 		for w, count := range c.RegexpMap {
 			if count == 0 {
 				continue
@@ -90,6 +89,7 @@ func (c *Cruncher) crunch(cb func(match Pair)) bool {
 				cb(Pair{Private: k.String(), Public: pub})
 			}
 		}
+		c.regexpMapMutex.Unlock()
 	}
 
 	<-c.thread // removes an int from threads, allowing another to proceed
@@ -121,22 +121,22 @@ func (c *Cruncher) CalculateSpeed() (int64, time.Duration) {
 			_ = k.String()
 			t := strings.ToLower(k.Public().String())
 
-			// Allow only one routine at a time to avoid
-			// "concurrent map iteration and map write"
 			if len(c.WordMap) > 0 {
+				// Allow only one routine at a time to avoid
+				// "concurrent map iteration and map write"
 				c.mapMutex.Lock()
-				defer c.mapMutex.Unlock()
 				for w := range c.WordMap {
 					_ = strings.HasPrefix(t, w)
 				}
+				c.mapMutex.Unlock()
 			}
 
 			if len(c.RegexpMap) > 0 {
 				c.regexpMapMutex.Lock()
-				defer c.regexpMapMutex.Unlock()
 				for w := range c.RegexpMap {
 					_ = w.MatchString(t)
 				}
+				c.regexpMapMutex.Unlock()
 			}
 
 			<-c.thread // removes an int from threads, allowing another to proceed
