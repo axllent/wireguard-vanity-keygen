@@ -103,6 +103,10 @@ func RemoveMetacharacters(s string) string {
 	// replace [a-b]+ with a
 	re2 := regexp.MustCompile(`\[[^]]*\]\+?`)
 	s = re2.ReplaceAllLiteralString(s, "a")
+	// strip all {n}
+	re3 := regexp.MustCompile(`\{[^}]+\}`)
+	s = re3.ReplaceAllLiteralString(s, "")
+	// strip out remaining regexp metacharacters
 	for _, rune1 := range []rune(regexChars) {
 		s = strings.ReplaceAll(s, string(rune1), "")
 	}
