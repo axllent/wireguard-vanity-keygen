@@ -77,9 +77,6 @@ func main() {
 
 	for _, word := range args {
 		sword := word
-		if !options.CaseSensitive {
-			sword = strings.ToLower(sword)
-		}
 		stripped := keygen.RemoveMetacharacters(sword)
 		if !keygen.IsValidSearch(stripped) {
 			fmt.Printf("\n\"%s\" contains invalid characters\n", word)
@@ -87,9 +84,15 @@ func main() {
 			os.Exit(2)
 		}
 		if stripped != sword {
+			if !options.CaseSensitive {
+				sword = "(?i)" + sword
+			}
 			regex := regexp.MustCompile(sword)
 			c.RegexpMap[regex] = options.LimitResults
 		} else {
+			if !options.CaseSensitive {
+				sword = strings.ToLower(sword)
+			}
 			c.WordMap[sword] = options.LimitResults
 		}
 		probability := keygen.CalculateProbability(stripped, options.CaseSensitive)
