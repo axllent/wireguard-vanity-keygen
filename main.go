@@ -84,27 +84,27 @@ func main() {
 			os.Exit(2)
 		}
 		if stripped != sword {
+			fmt.Printf("Cannot calculate probability for a regular expression: %s\n", sword)
+
 			if !options.CaseSensitive {
 				sword = "(?i)" + sword
 			}
 			regex := regexp.MustCompile(sword)
 			c.RegexpMap[regex] = options.LimitResults
-		} else {
-			if !options.CaseSensitive {
-				sword = strings.ToLower(sword)
-			}
-			c.WordMap[sword] = options.LimitResults
+
+			continue
 		}
-		probability := keygen.CalculateProbability(stripped, options.CaseSensitive)
+
+		if !options.CaseSensitive {
+			sword = strings.ToLower(sword)
+		}
+		c.WordMap[sword] = options.LimitResults
+		probability := keygen.CalculateProbability(sword, options.CaseSensitive)
 		estimate64 := int64(speed) * probability
 		estimate := time.Duration(estimate64)
 
-		comment := ""
-		if len(stripped) != len(sword) {
-			comment = fmt.Sprintf(" (approximation may be wildly off, as '%s' is test string)", stripped)
-		}
-		fmt.Printf("Probability for \"%s\": 1 in %s (approx %s per match)%s\n",
-			word, keygen.NumberFormat(probability), keygen.HumanizeDuration(estimate), comment)
+		fmt.Printf("Probability for \"%s\": 1 in %s (approx %s per match)\n",
+			word, keygen.NumberFormat(probability), keygen.HumanizeDuration(estimate))
 	}
 
 	fmt.Printf("\nPress Ctrl-c to cancel\n\n")

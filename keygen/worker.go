@@ -21,7 +21,6 @@ type Cruncher struct {
 	WordMap        map[string]int
 	mapMutex       sync.RWMutex
 	RegexpMap      map[*regexp.Regexp]int
-	regexpMapMutex sync.RWMutex
 	thread         chan int
 	Abort          bool // set to true to abort processing
 }
@@ -62,34 +61,28 @@ func (c *Cruncher) crunch(cb func(match Pair)) bool {
 
 	// Allow only one routine at a time to avoid
 	// "concurrent map iteration and map write"
-	if len(c.WordMap) > 0 {
-		c.mapMutex.Lock()
-		for w, count := range c.WordMap {
-			if count == 0 {
-				continue
-			}
-			completed = false
-			if strings.HasPrefix(matchKey, w) {
-				c.WordMap[w] = count - 1
-				cb(Pair{Private: k.String(), Public: pub})
-			}
+	c.mapMutex.Lock()
+	defer c.mapMutex.Unlock()
+	for w, count := range c.WordMap {
+		if count == 0 {
+			continue
 		}
-		c.mapMutex.Unlock()
+		completed = false
+		if strings.HasPrefix(matchKey, w) {
+			c.WordMap[w] = count - 1
+			cb(Pair{Private: k.String(), Public: pub})
+		}
 	}
 
-	if len(c.RegexpMap) > 0 {
-		c.regexpMapMutex.Lock()
-		for w, count := range c.RegexpMap {
-			if count == 0 {
-				continue
-			}
-			completed = false
-			if w.MatchString(matchKey) {
-				c.RegexpMap[w] = count - 1
-				cb(Pair{Private: k.String(), Public: pub})
-			}
+	for w, count := range c.RegexpMap {
+		if count == 0 {
+			continue
 		}
-		c.regexpMapMutex.Unlock()
+		completed = false
+		if w.MatchString(matchKey) {
+			c.RegexpMap[w] = count - 1
+			cb(Pair{Private: k.String(), Public: pub})
+		}
 	}
 
 	<-c.thread // removes an int from threads, allowing another to proceed
@@ -121,22 +114,16 @@ func (c *Cruncher) CalculateSpeed() (int64, time.Duration) {
 			_ = k.String()
 			t := strings.ToLower(k.Public().String())
 
-			if len(c.WordMap) > 0 {
-				// Allow only one routine at a time to avoid
-				// "concurrent map iteration and map write"
-				c.mapMutex.Lock()
-				for w := range c.WordMap {
-					_ = strings.HasPrefix(t, w)
-				}
-				c.mapMutex.Unlock()
+			// Allow only one routine at a time to avoid
+			// "concurrent map iteration and map write"
+			c.mapMutex.Lock()
+			defer c.mapMutex.Unlock()
+			for w := range c.WordMap {
+				_ = strings.HasPrefix(t, w)
 			}
 
-			if len(c.RegexpMap) > 0 {
-				c.regexpMapMutex.Lock()
-				for w := range c.RegexpMap {
-					_ = w.MatchString(t)
-				}
-				c.regexpMapMutex.Unlock()
+			for w := range c.RegexpMap {
+				_ = w.MatchString(t)
 			}
 
 			<-c.thread // removes an int from threads, allowing another to proceed
