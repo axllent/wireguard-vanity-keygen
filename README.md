@@ -64,9 +64,10 @@ estimated timings for each match on a system that reported  "`Calculating speed:
 | 8 chars | 7 months         | 38 years       |
 | 9 chars | 22 years         | 175 years      |
 
-Note that the above timings are for finding a result for any search term. 
-Passing multiple search terms will not substantially increase the time, 
-but increasing the limit to two (`--limit 2`) will double the estimated time, three will triple the time, etc.
+Note that the above timings are for finding a matching key for a single search term.
+Passing multiple search terms will not substantially increase the time to find any single term, but the time to find
+all search terms is the sum of all the estimated times.
+Also, increasing the limit to two (`--limit 2`) will double the estimated time, three will triple the time, etc.
 
 If any search term contains numbers, the timings would fall somewhere between the case-insensitive and case-sensitive columns.
 
