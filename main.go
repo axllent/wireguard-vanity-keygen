@@ -84,18 +84,17 @@ func main() {
 			os.Exit(2)
 		}
 		if stripped != sword {
-			fmt.Printf("Cannot calculate probability for a regular expression: %s\n", sword)
+			fmt.Printf("Cannot calculate probability for the regular expression \"%s\"\n", sword)
 
 			if !options.CaseSensitive {
 				sword = "(?i)" + sword
 			}
 			regex, err := regexp.Compile(sword)
 			if err != nil {
-				fmt.Printf("Invalid regular expression: %s: %v\n", word, err)
+				fmt.Printf("\n\"%s\" is an invalid regular expression: %v\n", word, err)
 				os.Exit(2)
 			}
 			c.RegexpMap[regex] = options.LimitResults
-
 			continue
 		}
 

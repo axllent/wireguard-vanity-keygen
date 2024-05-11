@@ -31,26 +31,25 @@ Options:
 ## Example
 
 ```
-$ wireguard-vanity-keygen -l 3 test pc1/ "^(abc|def)"
+$ wireguard-vanity-keygen -l 3 test pc1/ "^pc7[+/]"
 Calculating speed: 49,950 calculations per second using 4 CPU cores
 Case-insensitive search, exiting after 4 results
 Probability for "test": 1 in 2,085,136 (approx 41 seconds per match)
 Probability for "pc1/": 1 in 5,914,624 (approx 1 minute per match)
-Probability for "^(abc|def)": 1 in 3,010,936,384 (approx 3 hours, 40 minutes per match) (approximation may be wildly off, as 'abcdef' is test string)
+Cannot calculate probability for the regular expression "^pc7[/+]"
 
 Press Ctrl-c to cancel
 
 private OFVUjUoTNQp94fNPB9GCLzxiJPTbN03rcDPrVd12uFc=   public tEstMXL/3ZzAd2TnVlr1BNs/+eOnKzSHpGUnjspk3kc=
 private gInIEDmENYbyuaWR1W/KLfximExwbcCg45W2WOmEc0I=   public TestKmA/XVagDW/JsHBXk5mhYJ6E1N1lAWeIeCttgRs=
 private yDQLNiQlfnMGhUBsbLQjoBbuNezyHug31Qa1Ht6cgkw=   public PC1/3oUId241TLYImJLUObR8NNxz4HXzG4z+EazfWxY=
+private QIbJgxy83+F/1kdogcF+T04trs+1N9gAr1t5th2tLXM=   public Pc7+h172sx0TfIMikjgszM/B8i8/ghi7qJVOwWQtx0w=
 private +CUqn4jcKoL8pw53pD4IzfMKW/IMceDWKcM2W5Dxtn4=   public teStmGXZwiJl9HmfnTSmk83girtiIH8oZEa6PFJ8F1Y=
 private EMaUfQvAEABpQV/21ALJP5YtyGerRXAn8u67j2AQzVs=   public pC1/t2x5V99Y1SBqNgPZDPsa6r+L5y3BJ4XUCJMar3g=
 private wNuHOKCfoH1emfvijXNBoc/7KjrEXUeof7tSdGWvRFo=   public PC1/jXQosaBad2HePOm/w1KjCZ82eT3qNbfzNDZiwTs=
-private ACcI8j3TfWtGtZIqaf8a6qAxUx5fcuROMls2HRR3yGs=   public AbcP+qWv8OtXGHW2s2xWi8/uMNU7PxyDJZWcb0kQ5Ds=
-private KLBbXjsdWoF+FKVzTsJh//90rNxrUeBAxw5b4CaXDXI=   public DEfYIHnja/EP4KYcvwdbQcu03ITMXIHLoeC3d0ppkAw=
-private 0DB5zytfbxDs/fo0wmZBO12KbfeSTmxUD8S9ZQUXpWg=   public defP6d76lpIGu6aoBjKza16dZKirr5yzr5SKqihx2xw=
+private gJtn0woDChGvyN2eSdc7mTpAFA/nA6jykJeK5bYYfFA=   public Pc7+UEJSHiWsQ9zkO2q+guqDK4sc3VMDMgJu+h/bOFI=
+private IMyPmYm/v0SPmB62hC8l6kfxT3/Lfp7dMioo+SM6T2c=   public Pc7/uVfD/ZftxWBHwYbaudEywUS61biBcpj5Tw830Q4=
 ```
-
 
 ## Timings
 
@@ -67,15 +66,33 @@ estimated timings for each match on a system that reported  "`Calculating speed:
 | 8 chars | 7 months         | 38 years       |
 | 9 chars | 22 years         | 175 years      |
 
-Note that the above timings are for finding a result for any search term. 
-Passing multiple search terms will not substantially increase the time, 
+Note that the above timings are for finding a result for any search term.
+Passing multiple search terms will not substantially increase the time,
 but increasing the limit to two (`--limit 2`) will double the estimated time, three will triple the time, etc.
 
 If any search term contains numbers, the timings would fall somewhere between the case-insensitive and case-sensitive columns.
 
-Most regex expressions that include the pipe character (`|`), such as `^(abc|def)`, will cause the calculation to be wildly off.
-
 Of course, your mileage will differ, depending on the number, and speed, of your CPU cores.
+
+## Regular Expressions
+
+Since each additional letter in a search term increasing the search time exponentially, searching by regular expression may
+reduce the time considerably. Here are some examples:
+
+1. `.*word.*` - find word anywhere in the key (`word.*` and `.*word` will also work)
+2. `^.{0,10}word` - find word anywhere in the first 10 letters of the key
+3. `word1.*word2` - find two words, anywhere in the key
+4. `^[s5][o0][ll]ar` - find 'solar' or the visually similar 's01ar`, at the beginning of the key
+5. `^(best|next)[/+]` - find 'best' or the 'next' best, at the beginning of the key, with `/` or `+` as a delimiter
+
+A good guide on Go's regular expression syntax is at https://pkg.go.dev/regexp/syntax.
+
+NOTE: If your search term contains shell metacharacters, such as `|`, or `^`, you will need to quote the search time.
+On Windows, you must use double quotes (`"`), and not single quotes (`'`) when quoting a search term.
+
+NOTE: It is possible to create regular expressions that will never match a key.
+To guard against this, shorten your search term to use just one character in each section of your regular expression.
+If you don't get a hit after a few minutes, assume the regular expression may never match.
 
 ## Installing
 
