@@ -91,7 +91,7 @@ func main() {
 			}
 			regex, err := regexp.Compile(sword)
 			if err != nil {
-				fmt.Printf("Invalid regular expression: %s: %v\n", sword, err)
+				fmt.Printf("Invalid regular expression: %s: %v\n", word, err)
 				os.Exit(2)
 			}
 			c.RegexpMap[regex] = options.LimitResults
