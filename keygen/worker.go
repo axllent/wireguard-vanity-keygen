@@ -18,11 +18,11 @@ type Options struct {
 // Cruncher struct
 type Cruncher struct {
 	Options
-	WordMap        map[string]int
-	mapMutex       sync.RWMutex
-	RegexpMap      map[*regexp.Regexp]int
-	thread         chan int
-	Abort          bool // set to true to abort processing
+	WordMap   map[string]int
+	mapMutex  sync.RWMutex
+	RegexpMap map[*regexp.Regexp]int
+	thread    chan int
+	Abort     bool // set to true to abort processing
 }
 
 // Pair struct
