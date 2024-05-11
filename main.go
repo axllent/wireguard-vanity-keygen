@@ -89,7 +89,11 @@ func main() {
 			if !options.CaseSensitive {
 				sword = "(?i)" + sword
 			}
-			regex := regexp.MustCompile(sword)
+			regex, err := regexp.Compile(sword)
+			if err != nil {
+				fmt.Printf("Invalid regular expression: %s: %v\n", sword, err)
+				os.Exit(2)
+			}
 			c.RegexpMap[regex] = options.LimitResults
 
 			continue
