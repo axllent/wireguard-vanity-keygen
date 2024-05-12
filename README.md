@@ -76,23 +76,24 @@ Of course, your mileage will differ, depending on the number, and speed, of your
 
 ## Regular Expressions
 
-Since each additional letter in a search term increasing the search time exponentially, searching by regular expression may
+Since each additional letter in a search term increases the search time exponentially, searching using a regular expression may
 reduce the time considerably. Here are some examples:
 
 1. `.*word.*` - find word anywhere in the key (`word.*` and `.*word` will also work)
 2. `^.{0,10}word` - find word anywhere in the first 10 letters of the key
 3. `word1.*word2` - find two words, anywhere in the key
-4. `^[s5][o0][ll]ar` - find 'solar' or the visually similar 's01ar`, at the beginning of the key
-5. `^(best|next)[/+]` - find 'best' or the 'next' best, at the beginning of the key, with `/` or `+` as a delimiter
+4. `^[s5][o0][ll]ar` - find 'solar', or the visually similar 's01ar`, at the beginning of the key
+5. `^(best|next)[/+]` - find 'best', or the 'next' best, at the beginning of the key, with `/` or `+` as a delimiter
 
 A good guide on Go's regular expression syntax is at https://pkg.go.dev/regexp/syntax.
 
-NOTE: If your search term contains shell metacharacters, such as `|`, or `^`, you will need to quote the search time.
-On Windows, you must use double quotes (`"`), and not single quotes (`'`) when quoting a search term.
+To include a `+` in your regular expression, preface it with a backslash, like `\+`.
 
-NOTE: It is possible to create regular expressions that will never match a key.
-To guard against this, shorten your search term to use just one character in each section of your regular expression.
-If you don't get a hit after a few minutes, assume the regular expression may never match.
+NOTE: If your search term contains shell metacharacters, such as `|`, or `^`, you will need to quote it.
+On Windows, you must use double quotes. For example: `"^(a|b)"`.
+
+NOTE: Complex regular expressions, such as those using escape sequences, flags, or character classes, may never match a key.
+To avoid that, consider testing your regex using a tool such as [this one](https://go.dev/play/p/6LJy51Wd08O).
 
 ## Installing
 
