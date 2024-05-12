@@ -201,7 +201,7 @@ func (c *Cruncher) Find(cb func(match Pair)) {
 	ctx, _ := context.WithTimeout(context.Background(), c.timeout)
 
 	// This is same code as immediately above, with only the timeout logic added.
-	// Since the code is simply enough, let's duplicate it, so we don't slow down
+	// Since the code is simple enough, let's duplicate it, so we don't slow down
 	// the calculations with unnecessary logic, if the user didn't specify a timeout.
 	for {
 		c.thread <- 1 // will block if there is MAX ints in threads
