@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -75,23 +76,53 @@ func main() {
 		cs, options.LimitResults, keygen.Plural("result", int64(options.LimitResults)))
 
 	for _, word := range args {
+		word = strings.Trim(word, " ")
 		sword := word
-		if !options.CaseSensitive {
-			sword = strings.ToLower(sword)
+		if !keygen.IsRegex(sword) {
+			if !keygen.IsValidSearch(sword) {
+				fmt.Fprintln(os.Stderr, keygen.InvalidSearchMsg(word))
+				os.Exit(2)
+			}
+			if !options.CaseSensitive {
+				sword = strings.ToLower(sword)
+			}
+			c.WordMap[sword] = options.LimitResults
+			probability := keygen.CalculateProbability(sword, options.CaseSensitive)
+			estimate64 := int64(speed) * probability
+			estimate := time.Duration(estimate64)
+
+			fmt.Printf("Probability for \"%s\": 1 in %s (approx %s per match)\n",
+				word, keygen.NumberFormat(probability), keygen.HumanizeDuration(estimate))
+			continue
 		}
-		if !keygen.IsValidSearch(sword) {
-			fmt.Printf("\n\"%s\" contains invalid characters\n", word)
-			fmt.Println("Valid characters include letters [a-z], numbers [0-9], + and /")
+
+		errmsg := keygen.IsValidRegex(sword)
+		if errmsg != "" {
+			fmt.Fprintln(os.Stderr, errmsg)
 			os.Exit(2)
 		}
-		c.WordMap[sword] = options.LimitResults
 
-		probability := keygen.CalculateProbability(sword, options.CaseSensitive)
-		estimate64 := int64(speed) * probability
-		estimate := time.Duration(estimate64)
+		fmt.Printf("Probability for \"%s\" cannot be calculated as it is a regular expression\n", sword)
 
-		fmt.Printf("Probability for \"%s\": 1 in %s (approx %s per match)\n",
-			word, keygen.NumberFormat(probability), keygen.HumanizeDuration(estimate))
+		// strip off leading .* as it's implied:
+		re := regexp.MustCompile(`^\.\*`)
+		sword = re.ReplaceAllLiteralString(sword, "")
+		// strip off trailing .* as it's implied:
+		re = regexp.MustCompile(`\.\*$`)
+		sword = re.ReplaceAllLiteralString(sword, "")
+
+		regex := sword
+		if !options.CaseSensitive {
+			if !strings.HasPrefix(regex, "(?i)") {
+				regex = "(?i)" + regex
+			}
+		}
+		re, err := regexp.Compile(regex)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "\n\"%s\" is an invalid regular expression: %v\n", word, err)
+			os.Exit(2)
+		}
+		c.RegexpMap[re] = options.LimitResults
 	}
 
 	fmt.Printf("\nPress Ctrl-c to cancel\n\n")
