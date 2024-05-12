@@ -155,7 +155,7 @@ func parseTimeout(t string) (time.Duration, error) {
 		return time.Duration(0), nil
 	}
 
-	re := regexp.MustCompile(`^\d+$`)
+	re := regexp.MustCompile(`^[\d\.]+$`)
 	if re.MatchString(t) {
 		t += "m"
 	}
