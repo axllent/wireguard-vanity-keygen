@@ -46,6 +46,7 @@ func main() {
 	flag.BoolVarP(&options.CaseSensitive, "case-sensitive", "c", false, "case sensitive match (default false)")
 	flag.IntVarP(&options.Threads, "threads", "t", options.Cores, "threads")
 	flag.IntVarP(&options.LimitResults, "limit", "l", 1, "limit results to n (exists after)")
+	flag.StringVarP(&options.Timeout, "timeout", "T", "", "quit after n minutes (allowed suffixes: s/m/h) (default \"\")")
 
 	flag.Parse(os.Args[1:])
 	args := flag.Args()
@@ -61,7 +62,17 @@ func main() {
 		options.Cores = options.Threads
 	}
 
-	c := keygen.New(options)
+	timeout, err := parseTimeout(options.Timeout)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Invalid timeout value: %s\n", err)
+		os.Exit(2)
+	}
+
+	if timeout > time.Duration(0) {
+		fmt.Printf("Quitting after %v\n", timeout)
+	}
+
+	c := keygen.New(options, timeout)
 
 	fmt.Printf("Calculating speed: ")
 
@@ -135,4 +146,23 @@ func main() {
 			fmt.Printf("private %s   public %s\n", match.Private, match.Public)
 		}
 	}
+}
+
+// parseTimeout parses the timeout string to a time.Duration. If the input is
+// solely digits, minutes is assumed
+func parseTimeout(t string) (time.Duration, error) {
+	if t == "" {
+		return time.Duration(0), nil
+	}
+
+	re := regexp.MustCompile(`^\d+$`)
+	if re.MatchString(t) {
+		t += "m"
+	}
+	complex, err := time.ParseDuration(t)
+	if err != nil {
+		return time.Duration(0), err
+	}
+
+	return complex, nil
 }
