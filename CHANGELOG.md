@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.9]
+
+- Add regex support (#13)
+- Update Go modules
+
+
 ## [0.0.8]
 
 - Update Go modules
