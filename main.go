@@ -68,10 +68,6 @@ func main() {
 		os.Exit(2)
 	}
 
-	if timeout > time.Duration(0) {
-		fmt.Printf("Quitting after %v\n", timeout)
-	}
-
 	c := keygen.New(options, timeout)
 
 	fmt.Printf("Calculating speed: ")
@@ -136,6 +132,10 @@ func main() {
 		c.RegexpMap[re] = options.LimitResults
 	}
 
+	if timeout > time.Duration(0) {
+		fmt.Printf("\nQuitting after %v, or sooner if all matching keys are found...\n", timeout)
+	}
+	
 	fmt.Printf("\nPress Ctrl-c to cancel\n\n")
 	if !summary {
 		c.Find(func(match keygen.Pair) {
