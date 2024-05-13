@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-// regexChars contains the list of regex metacharacters, excluding +,
-// which is valid in a key
+// regexChars contains the list of the metacharacters used in regular expressions,
+// but not including the + character, which is valid in a key
 const regexChars = `^$.|?*-[]{}()\`
 
 // regexWillNeverMatch is a shared error message that the regex will never match
@@ -113,7 +113,7 @@ func invalidRegexMsg(s string, errmsg string) string {
 
 // IsValidRegex checks the regex has any chance of matching a key
 func IsValidRegex(s string) string {
-	// A consise guide on golang's regex syntax is at
+	// A concise guide on golang's regex syntax is at
 	// https://pkg.go.dev/regexp/syntax
 
 	stripped := removeMetacharacters(s)
@@ -121,13 +121,15 @@ func IsValidRegex(s string) string {
 		return InvalidSearchMsg(s)
 	}
 
-	// Expressions with '^' character
+	// Regexes containing the '^' character:
+
 	re := regexp.MustCompile(`.\^`)
 	if re.MatchString(s) {
 		return invalidRegexMsg(s, "The '^' character must appear at the beginning of the search term")
 	}
 
-	// Expressions with '$' character
+	// Regexes containing the '$' character:
+
 	re = regexp.MustCompile(`\$.`)
 	if re.MatchString(s) {
 		return invalidRegexMsg(s, "The '$' character must appear at the end of the search term")
@@ -141,7 +143,7 @@ func IsValidRegex(s string) string {
 		return invalidRegexMsg(s, "The '=' character can only appear at the end of a key")
 	}
 	// The command:
-	// wireguard-vanity-keygen -l 1000 . | grep private | cut -c 105- | sort -u | tr -d "=" | tr -d "\n"
+	// wireguard-vanity-keygen -l 1000 a | grep private | cut -c 105- | sort -u | tr -d "=" | tr -d "\n"
 	// outputs:
 	// 048AEIMQUYcgkosw
 	re = regexp.MustCompile(`[^048AEIMQUYcgkosw]=\$`)
@@ -149,7 +151,7 @@ func IsValidRegex(s string) string {
 		return invalidRegexMsg(s, regexWillNeverMatch)
 	}
 
-	// Expressions with backslashes:
+	// Regexes containing backslashes:
 
 	// A regex of just a backslash and a single character will never match
 	re = regexp.MustCompile(`^\\.$`)
@@ -157,7 +159,7 @@ func IsValidRegex(s string) string {
 		return invalidRegexMsg(s, regexWillNeverMatch)
 	}
 
-	// Control characters and many octal values will meter match, disallow them all
+	// Control characters and most octal values will never match, disallow them all
 	re = regexp.MustCompile(`\\[aftnrxswWpP0-7]`)
 	if re.MatchString(s) {
 		return invalidRegexMsg(s, regexWillNeverMatch)
@@ -169,7 +171,7 @@ func IsValidRegex(s string) string {
 		return invalidRegexMsg(s, regexWillNeverMatch)
 	}
 
-	// Expressions with character classes: [[:alnum:]], etc.
+	// Regexes containing character classes: [[:alnum:]], etc.
 
 	// [[:blank:]], [[:cntrl:]], [[:punct:]] and [[:space:]] will never match
 	re = regexp.MustCompile(`\[\[:(blank|cntrl|punct|space):\]\]`)
@@ -186,7 +188,7 @@ func IsValidRegex(s string) string {
 	return ""
 }
 
-// removeMetacharacters removes regex metacharacters from the string
+// removeMetacharacters removes regex metacharacters (except +) from the string
 func removeMetacharacters(s string) string {
 	// This logic isn't needed anymore, as we don't attempt to calculate the probability of regular expressions
 	// // remove (?i) from beginning of string
@@ -203,7 +205,7 @@ func removeMetacharacters(s string) string {
 	// s = re.ReplaceAllLiteralString(s, "x")
 
 	// strip out remaining regexp metacharacters
-	for _, rune1 := range []rune(regexChars) {
+	for _, rune1 := range regexChars {
 		s = strings.ReplaceAll(s, string(rune1), "")
 	}
 	return s
