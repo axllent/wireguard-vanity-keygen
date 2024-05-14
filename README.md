@@ -2,8 +2,8 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/axllent/wireguard-vanity-keygen)](https://goreportcard.com/report/github.com/axllent/wireguard-vanity-keygen)
 
-A command-line vanity (public) key generator for [WireGuard](https://www.wireguard.com/). It only matches the prefix of generated public keys,
-and not whether the search matches anywhere in the public key. The concept is based on 
+A command-line vanity (public) key generator for [WireGuard](https://www.wireguard.com/). By default, it only matches the prefix of generated public keys,
+and not whether the search matches anywhere in the public key. The concept is based on
 [wireguard-vanity-address](https://github.com/warner/wireguard-vanity-address), however I wanted something a little more streamlined.
 
 
@@ -54,10 +54,16 @@ private IMyPmYm/v0SPmB62hC8l6kfxT3/Lfp7dMioo+SM6T2c=   public Pc7/uVfD/ZftxWBHwY
 ```
 
 
+## Installing
+
+Download the [latest binary release](https://github.com/axllent/wireguard-vanity-keygen/releases/latest) for your system,
+or build from source `go install github.com/axllent/wireguard-vanity-keygen@latest`.
+
+
 ## Timings
 
 To give you a rough idea of how long it will take to generate keys, the following table lists
-estimated timings for each match on a system that reported  "`Calculating speed: 230,000 calculations per second using 19 CPU cores`" when it started:
+estimated timings to find a matching key on a system that reported  "`Calculating speed: 230,000 calculations per second using 19 CPU cores`" when it started:
 
 | Length  | Case-insensitive | Case-sensitive |
 | :------ | :--------------- | :------------- |
@@ -92,19 +98,14 @@ reduce the time considerably. Here are some examples:
 
 A good guide on Go's regular expression syntax is at https://pkg.go.dev/regexp/syntax.
 
-To include a `+` in your regular expression, preface it with a backslash, like `\+`.
+To include a literal `+` in your regular expression, preface it with a backslash: `^ex\+`.
 
 NOTE: If your search term contains shell metacharacters, such as `|`, or `^`, you will need to quote it.
 On Windows, you must use double quotes. For example: `"^(a|b)"`.
 
 NOTE: Complex regular expressions, such as those using escape sequences, flags, or character classes, may never match a key.
-To avoid that, consider testing your regex using a tool such as [this one](https://go.dev/play/p/6LJy51Wd08O).
-
-
-## Installing
-
-Download the [latest binary release](https://github.com/axllent/wireguard-vanity-keygen/releases/latest) for your system, 
-or build from source `go install github.com/axllent/wireguard-vanity-keygen@latest`.
+To avoid that, consider testing your regex using a tool such as [this one](https://go.dev/play/p/6LJy51Wd08O) on The Go Playground,
+ or the same tool on [goplay.tools](https://goplay.tools/snippet/6LJy51Wd08O).
 
 
 ## FAQ
