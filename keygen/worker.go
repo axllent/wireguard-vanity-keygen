@@ -6,8 +6,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"golang.org/x/net/context"
 )
 
 // Options struct
@@ -198,27 +196,31 @@ func (c *Cruncher) Find(cb func(match Pair)) {
 		return
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), c.timeout)
+	t := time.NewTimer(c.timeout)
 
 	// This is same code as immediately above, with only the timeout logic added.
 	// Since the code is simple enough, let's duplicate it, so we don't slow down
 	// the calculations with unnecessary logic, if the user didn't specify a timeout.
 	for {
 		c.thread <- 1 // will block if there is MAX ints in threads
-		go func(ctx context.Context) {
+		go func(t *time.Timer) {
 			if c.crunch(cb) {
 				c.Abort = true
 				return
 			}
 			select {
-			case <-ctx.Done():
+			case <-t.C:
 				c.timedout = true
 				c.Abort = true
 			}
-		}(ctx)
+		}(t)
 		if c.Abort {
 			if c.timedout {
 				fmt.Printf("Timed out after %v\n", c.timeout)
+			} else {
+				if !t.Stop() {
+					<-t.C
+				}
 			}
 			return
 		}
