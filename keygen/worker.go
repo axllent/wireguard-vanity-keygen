@@ -212,6 +212,7 @@ func (c *Cruncher) Find(cb func(match Pair)) {
 			case <-t.C:
 				c.timedout = true
 				c.Abort = true
+			default:
 			}
 		}(t)
 		if c.Abort {
