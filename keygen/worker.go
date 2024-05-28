@@ -180,7 +180,7 @@ func (c *Cruncher) CollectToSlice() []Pair {
 func (c *Cruncher) Find(cb func(match Pair)) {
 
 	if c.timeout == time.Duration(0) {
-		// If you change anything in this for block, make the cooresponding change in
+		// If you change anything in this for block, make the corresponding change in
 		// the timeout-aware for block below this one.
 		for {
 			c.thread <- 1 // will block if there is MAX ints in threads
@@ -193,7 +193,6 @@ func (c *Cruncher) Find(cb func(match Pair)) {
 				return
 			}
 		}
-		return
 	}
 
 	t := time.NewTimer(c.timeout)
