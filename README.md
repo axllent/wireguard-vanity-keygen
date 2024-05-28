@@ -2,7 +2,9 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/axllent/wireguard-vanity-keygen)](https://goreportcard.com/report/github.com/axllent/wireguard-vanity-keygen)
 
-A command-line vanity (public) key generator for [WireGuard](https://www.wireguard.com/). It only matches the prefix of generated public keys, and not whether the search matches anywhere in the public key. The concept is based on [wireguard-vanity-address](https://github.com/warner/wireguard-vanity-address), however I wanted something a little more streamlined.
+A command-line vanity (public) key generator for [WireGuard](https://www.wireguard.com/). By default, it only matches the prefix of generated public keys,
+and not whether the search matches anywhere in the public key. The concept is based on
+[wireguard-vanity-address](https://github.com/warner/wireguard-vanity-address), however I wanted something a little more streamlined.
 
 
 ## Features
@@ -51,10 +53,17 @@ private gJtn0woDChGvyN2eSdc7mTpAFA/nA6jykJeK5bYYfFA=   public Pc7+UEJSHiWsQ9zkO2
 private IMyPmYm/v0SPmB62hC8l6kfxT3/Lfp7dMioo+SM6T2c=   public Pc7/uVfD/ZftxWBHwYbaudEywUS61biBcpj5Tw830Q4=
 ```
 
+
+## Installing
+
+Download the [latest binary release](https://github.com/axllent/wireguard-vanity-keygen/releases/latest) for your system,
+or build from source `go install github.com/axllent/wireguard-vanity-keygen@latest`.
+
+
 ## Timings
 
 To give you a rough idea of how long it will take to generate keys, the following table lists
-estimated timings for each match on a system that reported  "`Calculating speed: 230,000 calculations per second using 19 CPU cores`" when it started:
+estimated timings to find a matching key on a system that reported  "`Calculating speed: 230,000 calculations per second using 19 CPU cores`" when it started:
 
 | Length  | Case-insensitive | Case-sensitive |
 | :------ | :--------------- | :------------- |
@@ -66,13 +75,15 @@ estimated timings for each match on a system that reported  "`Calculating speed:
 | 8 chars | 7 months         | 38 years       |
 | 9 chars | 22 years         | 175 years      |
 
-Note that the above timings are for finding a result for any search term.
-Passing multiple search terms will not substantially increase the time,
-but increasing the limit to two (`--limit 2`) will double the estimated time, three will triple the time, etc.
+Note that the above timings are for finding a matching key for a single search term.
+Passing multiple search terms will not substantially increase the time to find any single term, but the time to find
+all search terms is the sum of all the estimated times.
+Also, increasing the limit to two (`--limit 2`) will double the estimated time, three will triple the time, etc.
 
 If any search term contains numbers, the timings would fall somewhere between the case-insensitive and case-sensitive columns.
 
 Of course, your mileage will differ, depending on the number, and speed, of your CPU cores.
+
 
 ## Regular Expressions
 
@@ -87,18 +98,14 @@ reduce the time considerably. Here are some examples:
 
 A good guide on Go's regular expression syntax is at https://pkg.go.dev/regexp/syntax.
 
-To include a `+` in your regular expression, preface it with a backslash, like `\+`.
+To include a literal `+` in your regular expression, preface it with a backslash: `^ex\+`.
 
 NOTE: If your search term contains shell metacharacters, such as `|`, or `^`, you will need to quote it.
 On Windows, you must use double quotes. For example: `"^(a|b)"`.
 
 NOTE: Complex regular expressions, such as those using escape sequences, flags, or character classes, may never match a key.
-To avoid that, consider testing your regex using a tool such as [this one](https://go.dev/play/p/6LJy51Wd08O).
-
-## Installing
-
-Download the [latest binary release](https://github.com/axllent/wireguard-vanity-keygen/releases/latest) for your system, 
-or build from source `go install github.com/axllent/wireguard-vanity-keygen@latest`.
+To avoid that, consider testing your regex using a tool such as [this one](https://go.dev/play/p/6LJy51Wd08O) on The Go Playground,
+ or the same tool on [goplay.tools](https://goplay.tools/snippet/6LJy51Wd08O).
 
 
 ## FAQ
@@ -109,6 +116,7 @@ Valid characters include `A-Z`, `a-z`, `0-9`, `/` and `+`. There are no other ch
 
 You can also use regex expressions to search.
 
+
 ### Why does `test` & `tes1` show different probabilities despite having 4 characters each?
 
 With case-insensitive searches (default), a-z have the chance of matching both uppercase and lowercase. A search for "cat" can match `Cat`, `cAT` etc.
@@ -116,9 +124,12 @@ With case-insensitive searches (default), a-z have the chance of matching both u
 
 ### How accurate are the estimated times?
 
-They are not (and cannot be) accurate. Keys are completely randomly generated, and the estimate is based on a law of averages. For instance, you could find a match for a one in a billion chance on the very first hit, or it could take you 5 billion attempts. It will however give you an indication based on your CPU speed, word count, case sensitivity, and use of numbers or characters.
+They are not (and cannot be) accurate. Keys are completely randomly generated, and the estimate is based on a law of averages.
+For instance, you could find a match for a one in a billion chance on the very first hit, or it could take you 5 billion attempts.
+It will however give you an indication based on your CPU speed, word count, case sensitivity, and use of numbers or characters.
 
 
 ### Why do I need this?
 
-You don't. I wrote it because I run a WireGuard server, which does not provide any reference as to who the key belongs to (`wg` on the server). Using vanity keys, I can at least identify connections. I also wanted to learn more about multi-core processing in Golang.
+You don't. I wrote it because I run a WireGuard server, which does not provide any reference as to who the key belongs to (`wg` on the server).
+Using vanity keys, I can at least identify connections. I also wanted to learn more about multi-core processing in Golang.

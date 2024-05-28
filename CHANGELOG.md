@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.0]
+
+- Add timeout option (#16)
+
+
 ## [0.0.9]
 
 - Add regex support (#13)
@@ -27,7 +32,7 @@
 
 ## [0.0.5]
 
-- Allow for inclusion as a module (see #2)
+- Allow for inclusion as a module (#2)
 
 
 ## [0.0.4]
