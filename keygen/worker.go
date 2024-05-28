@@ -1,6 +1,7 @@
 package keygen
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 	"sync"
@@ -13,6 +14,7 @@ type Options struct {
 	Threads       int
 	CaseSensitive bool
 	Cores         int
+	Timeout       string
 }
 
 // Cruncher struct
@@ -23,6 +25,8 @@ type Cruncher struct {
 	RegexpMap map[*regexp.Regexp]int
 	thread    chan int
 	Abort     bool // set to true to abort processing
+	timeout   time.Duration
+	timedout  bool
 }
 
 // Pair struct
@@ -32,12 +36,13 @@ type Pair struct {
 }
 
 // New returns a Cruncher
-func New(options Options) *Cruncher {
+func New(options Options, timeout time.Duration) *Cruncher {
 	return &Cruncher{
 		Options:   options,
 		WordMap:   make(map[string]int),
 		RegexpMap: make(map[*regexp.Regexp]int),
 		thread:    make(chan int, options.Cores),
+		timeout:   timeout,
 	}
 }
 
@@ -173,14 +178,51 @@ func (c *Cruncher) CollectToSlice() []Pair {
 
 // Find will invoke a callback function for each match to support some interactivity or at least feedback
 func (c *Cruncher) Find(cb func(match Pair)) {
+
+	if c.timeout == time.Duration(0) {
+		// If you change anything in this for block, make the cooresponding change in
+		// the timeout-aware for block below this one.
+		for {
+			c.thread <- 1 // will block if there is MAX ints in threads
+			go func() {
+				if c.crunch(cb) {
+					c.Abort = true
+				}
+			}()
+			if c.Abort {
+				return
+			}
+		}
+		return
+	}
+
+	t := time.NewTimer(c.timeout)
+
+	// This is same code as immediately above, with only the timeout logic added.
+	// Since the code is simple enough, let's duplicate it, so we don't slow down
+	// the calculations with unnecessary logic, if the user didn't specify a timeout.
 	for {
 		c.thread <- 1 // will block if there is MAX ints in threads
-		go func() {
+		go func(t *time.Timer) {
 			if c.crunch(cb) {
 				c.Abort = true
+				return
 			}
-		}()
+			select {
+			case <-t.C:
+				c.timedout = true
+				c.Abort = true
+			default:
+			}
+		}(t)
 		if c.Abort {
+			if c.timedout {
+				fmt.Printf("Timed out after %v\n", c.timeout)
+			} else {
+				if !t.Stop() {
+					<-t.C
+				}
+			}
 			return
 		}
 	}
