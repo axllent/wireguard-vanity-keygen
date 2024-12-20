@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.1]
+
+- Update Go modules
+
+
 ## [0.1.0]
 
 - Add timeout option (#16)
