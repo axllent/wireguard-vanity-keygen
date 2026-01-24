@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -18,11 +18,27 @@ type Options struct {
 }
 
 // Cruncher struct
+
+// AtomicCounter struct
+type AtomicCounter struct {
+	Value int64
+}
+
+// Dec decrements the counter and returns the new value
+func (a *AtomicCounter) Dec() int64 {
+	return atomic.AddInt64(&a.Value, -1)
+}
+
+// Get returns the current value of the counter
+func (a *AtomicCounter) Get() int64 {
+	return atomic.LoadInt64(&a.Value)
+}
+
+// Cruncher struct
 type Cruncher struct {
 	Options
-	WordMap   map[string]int
-	mapMutex  sync.RWMutex
-	RegexpMap map[*regexp.Regexp]int
+	WordMap   map[string]*AtomicCounter
+	RegexpMap map[*regexp.Regexp]*AtomicCounter
 	thread    chan int
 	Abort     bool // set to true to abort processing
 	timeout   time.Duration
@@ -39,8 +55,8 @@ type Pair struct {
 func New(options Options, timeout time.Duration) *Cruncher {
 	return &Cruncher{
 		Options:   options,
-		WordMap:   make(map[string]int),
-		RegexpMap: make(map[*regexp.Regexp]int),
+		WordMap:   make(map[string]*AtomicCounter),
+		RegexpMap: make(map[*regexp.Regexp]*AtomicCounter),
 		thread:    make(chan int, options.Cores),
 		timeout:   timeout,
 	}
@@ -60,33 +76,29 @@ func (c *Cruncher) crunch(cb func(match Pair)) bool {
 		matchKey = strings.ToLower(pub)
 	}
 
-	// Assume the task is completed, once all searched have been found
-	// and limits have been reached, it sends an exit signal
 	completed := true
 
-	// Allow only one routine at a time to avoid
-	// "concurrent map iteration and map write"
-	c.mapMutex.Lock()
-	defer c.mapMutex.Unlock()
-	for w, count := range c.WordMap {
-		if count == 0 {
+	for w, counter := range c.WordMap {
+		if counter.Get() <= 0 {
 			continue
 		}
 		completed = false
 		if strings.HasPrefix(matchKey, w) {
-			c.WordMap[w] = count - 1
-			cb(Pair{Private: k.String(), Public: pub})
+			if counter.Dec() >= 0 {
+				cb(Pair{Private: k.String(), Public: pub})
+			}
 		}
 	}
 
-	for w, count := range c.RegexpMap {
-		if count == 0 {
+	for w, counter := range c.RegexpMap {
+		if counter.Get() <= 0 {
 			continue
 		}
 		completed = false
 		if w.MatchString(matchKey) {
-			c.RegexpMap[w] = count - 1
-			cb(Pair{Private: k.String(), Public: pub})
+			if counter.Dec() >= 0 {
+				cb(Pair{Private: k.String(), Public: pub})
+			}
 		}
 	}
 
@@ -121,8 +133,6 @@ func (c *Cruncher) CalculateSpeed() (int64, time.Duration) {
 
 			// Allow only one routine at a time to avoid
 			// "concurrent map iteration and map write"
-			c.mapMutex.Lock()
-			defer c.mapMutex.Unlock()
 			for w := range c.WordMap {
 				_ = strings.HasPrefix(t, w)
 			}

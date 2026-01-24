@@ -93,7 +93,7 @@ func main() {
 			if !options.CaseSensitive {
 				sword = strings.ToLower(sword)
 			}
-			c.WordMap[sword] = options.LimitResults
+			c.WordMap[sword] = &keygen.AtomicCounter{Value: int64(options.LimitResults)}
 			probability := keygen.CalculateProbability(sword, options.CaseSensitive)
 			estimate64 := int64(speed) * probability
 			estimate := time.Duration(estimate64)
@@ -129,13 +129,13 @@ func main() {
 			fmt.Fprintf(os.Stderr, "\n\"%s\" is an invalid regular expression: %v\n", word, err)
 			os.Exit(2)
 		}
-		c.RegexpMap[re] = options.LimitResults
+		c.RegexpMap[re] = &keygen.AtomicCounter{Value: int64(options.LimitResults)}
 	}
 
 	if timeout > time.Duration(0) {
 		fmt.Printf("\nQuitting after %v, or sooner if all matching keys are found...\n", timeout)
 	}
-	
+
 	fmt.Printf("\nPress Ctrl-c to cancel\n\n")
 	if !summary {
 		c.Find(func(match keygen.Pair) {
