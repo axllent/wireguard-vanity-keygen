@@ -93,7 +93,7 @@ func main() {
 			if !options.CaseSensitive {
 				sword = strings.ToLower(sword)
 			}
-			c.WordMap[sword] = options.LimitResults
+			c.WordMap[sword] = &keygen.AtomicCounter{Value: int64(options.LimitResults)}
 			probability := keygen.CalculateProbability(sword, options.CaseSensitive)
 			estimate64 := int64(speed) * probability
 			estimate := time.Duration(estimate64)
@@ -103,9 +103,9 @@ func main() {
 			continue
 		}
 
-		errmsg := keygen.IsValidRegex(sword)
-		if errmsg != "" {
-			fmt.Fprintln(os.Stderr, errmsg)
+		errMsg := keygen.IsValidRegex(sword)
+		if errMsg != "" {
+			fmt.Fprintln(os.Stderr, errMsg)
 			os.Exit(2)
 		}
 
@@ -129,21 +129,21 @@ func main() {
 			fmt.Fprintf(os.Stderr, "\n\"%s\" is an invalid regular expression: %v\n", word, err)
 			os.Exit(2)
 		}
-		c.RegexpMap[re] = options.LimitResults
+		c.RegexpMap[re] = &keygen.AtomicCounter{Value: int64(options.LimitResults)}
 	}
 
 	if timeout > time.Duration(0) {
 		fmt.Printf("\nQuitting after %v, or sooner if all matching keys are found...\n", timeout)
 	}
-	
+
 	fmt.Printf("\nPress Ctrl-c to cancel\n\n")
 	if !summary {
 		c.Find(func(match keygen.Pair) {
-			fmt.Printf("private %s   public %s\n", match.Private, match.Public)
+			fmt.Printf("private: %s   public: %s\n", match.Private, match.Public)
 		})
 	} else {
 		for _, match := range c.CollectToSlice() {
-			fmt.Printf("private %s   public %s\n", match.Private, match.Public)
+			fmt.Printf("private: %s   public: %s\n", match.Private, match.Public)
 		}
 	}
 }
@@ -159,10 +159,10 @@ func parseTimeout(t string) (time.Duration, error) {
 	if re.MatchString(t) {
 		t += "m"
 	}
-	complex, err := time.ParseDuration(t)
+	duration, err := time.ParseDuration(t)
 	if err != nil {
 		return time.Duration(0), err
 	}
 
-	return complex, nil
+	return duration, nil
 }
