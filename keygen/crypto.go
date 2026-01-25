@@ -5,7 +5,8 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 
-	"golang.org/x/crypto/curve25519"
+	curve25519voi "github.com/oasisprotocol/curve25519-voi/curve"
+	scalar "github.com/oasisprotocol/curve25519-voi/curve/scalar"
 )
 
 // KeySize defines the size of the key
@@ -19,33 +20,29 @@ type Key [KeySize]byte
 // It is used by WireGuard to represent private keys.
 type PrivateKey [KeySize]byte
 
-// NewPrivateKey generates a new curve25519 secret key.
-// It conforms to the format described on https://cr.yp.to/ecdh.html.
+// NewPrivateKey generates a new curve25519 secret key (clamped).
 func newPrivateKey() (PrivateKey, error) {
-	k, err := newPreSharedKey()
+	var priv [KeySize]byte
+	_, err := rand.Read(priv[:])
 	if err != nil {
 		return PrivateKey{}, err
 	}
-	k[0] &= 248
-	k[31] = (k[31] & 127) | 64
-	return (PrivateKey)(*k), nil
+	// Clamp as per RFC 7748
+	priv[0] &= 248
+	priv[31] = (priv[31] & 127) | 64
+	return PrivateKey(priv), nil
 }
 
-// NewPreSharedKey generates a new key
-func newPreSharedKey() (*Key, error) {
-	var k [KeySize]byte
-	_, err := rand.Read(k[:])
-	if err != nil {
-		return nil, err
-	}
-	return (*Key)(&k), nil
-}
-
-// Public computes the public key matching this curve25519 secret key.
+// Public computes the public key matching this curve25519 secret key using curve25519-voi.
 func (k *PrivateKey) Public() Key {
-	var p [KeySize]byte
-	curve25519.ScalarBaseMult(&p, (*[KeySize]byte)(k))
-	return (Key)(p)
+	var pub curve25519voi.MontgomeryPoint
+	base := *curve25519voi.X25519_BASEPOINT
+	s, err := scalar.NewFromBytesModOrder(k[:])
+	if err != nil || s == nil {
+		panic("invalid private key for scalar.NewFromBytesModOrder: " + err.Error())
+	}
+	pub.Mul(&base, s)
+	return Key(pub)
 }
 
 // String returns a private key as a string
