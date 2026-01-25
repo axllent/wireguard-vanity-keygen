@@ -8,8 +8,8 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/" # Location of package manifests
     schedule:
-      interval: "monthly"
+      interval: "semiannually"
   - package-ecosystem: "github-actions"
     directory: "/" # Location of package manifests
     schedule:
-      interval: "monthly"
+      interval: "semiannually"
