@@ -19,10 +19,10 @@ jobs:
           - goarch: arm
             goos: windows
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
 
     # build the binaries
-    - uses: wangyoucao577/go-release-action@v1.53
+    - uses: wangyoucao577/go-release-action@v1.55
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}

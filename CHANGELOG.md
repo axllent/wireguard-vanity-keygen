@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.3]
+
+- Switch to `github.com/oasisprotocol/curve25519-voi` for a ~18% speed improvement
+- Refactor key management to use AtomicCounter for thread-safe operations in Cruncher
+- Add benchmark test
+- Update Go dependencies
+- Code cleanup
+- Update Dependabot schedule to semiannually
+
 ## [0.1.2]
 
 - Update Go dependencies

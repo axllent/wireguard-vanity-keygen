@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// regexChars contains the list of the metacharacters used in regular expressions,
+// regexChars contains the list of the meta characters used in regular expressions,
 // but not including the + character, which is valid in a key
 const regexChars = `^$.|?*-[]{}()\`
 
@@ -31,7 +31,7 @@ func InvalidSearchMsg(s string) string {
 func HumanizeDuration(duration time.Duration) string {
 	// more than duration can handle
 	if duration.Hours() < 0.0 {
-		return fmt.Sprintf("hundreds of years")
+		return "hundreds of years"
 	}
 	if duration.Hours() > 8760.0 {
 		y := int64(duration.Hours() / 8760)
@@ -101,14 +101,14 @@ func NumberFormat(n int64) string {
 	}
 }
 
-// IsRegex returns true if any regex metacharacters (except +) are in the search term
+// IsRegex returns true if any regex meta characters (except +) are in the search term
 func IsRegex(s string) bool {
 	return strings.ContainsAny(s, regexChars)
 }
 
 // invalidRegexMsg returns an error message how the regex is invalid
-func invalidRegexMsg(s string, errmsg string) string {
-	return fmt.Sprintf("\n\"%s\" is an invalid regular expression\n%s", s, errmsg)
+func invalidRegexMsg(s string, errMsg string) string {
+	return fmt.Sprintf("\n\"%s\" is an invalid regular expression\n%s", s, errMsg)
 }
 
 // IsValidRegex checks the regex has any chance of matching a key
@@ -116,7 +116,7 @@ func IsValidRegex(s string) string {
 	// A concise guide on golang's regex syntax is at
 	// https://pkg.go.dev/regexp/syntax
 
-	stripped := removeMetacharacters(s)
+	stripped := removeMetaCharacters(s)
 	if !IsValidSearch(stripped) {
 		return InvalidSearchMsg(s)
 	}
@@ -188,8 +188,8 @@ func IsValidRegex(s string) string {
 	return ""
 }
 
-// removeMetacharacters removes regex metacharacters (except +) from the string
-func removeMetacharacters(s string) string {
+// RemoveMetaCharacters removes regex meta characters (except +) from the string
+func removeMetaCharacters(s string) string {
 	// This logic isn't needed anymore, as we don't attempt to calculate the probability of regular expressions
 	// // remove (?i) from beginning of string
 	// re := regexp.MustCompile(`^\([^)]*\)`)
@@ -204,7 +204,7 @@ func removeMetacharacters(s string) string {
 	// re = regexp.MustCompile(`=`)
 	// s = re.ReplaceAllLiteralString(s, "x")
 
-	// strip out remaining regexp metacharacters
+	// strip out remaining regexp meta characters
 	for _, rune1 := range regexChars {
 		s = strings.ReplaceAll(s, string(rune1), "")
 	}
