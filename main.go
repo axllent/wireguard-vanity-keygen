@@ -103,9 +103,9 @@ func main() {
 			continue
 		}
 
-		errmsg := keygen.IsValidRegex(sword)
-		if errmsg != "" {
-			fmt.Fprintln(os.Stderr, errmsg)
+		errMsg := keygen.IsValidRegex(sword)
+		if errMsg != "" {
+			fmt.Fprintln(os.Stderr, errMsg)
 			os.Exit(2)
 		}
 
@@ -139,11 +139,11 @@ func main() {
 	fmt.Printf("\nPress Ctrl-c to cancel\n\n")
 	if !summary {
 		c.Find(func(match keygen.Pair) {
-			fmt.Printf("private %s   public %s\n", match.Private, match.Public)
+			fmt.Printf("private: %s   public: %s\n", match.Private, match.Public)
 		})
 	} else {
 		for _, match := range c.CollectToSlice() {
-			fmt.Printf("private %s   public %s\n", match.Private, match.Public)
+			fmt.Printf("private: %s   public: %s\n", match.Private, match.Public)
 		}
 	}
 }
@@ -159,10 +159,10 @@ func parseTimeout(t string) (time.Duration, error) {
 	if re.MatchString(t) {
 		t += "m"
 	}
-	complex, err := time.ParseDuration(t)
+	duration, err := time.ParseDuration(t)
 	if err != nil {
 		return time.Duration(0), err
 	}
 
-	return complex, nil
+	return duration, nil
 }

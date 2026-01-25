@@ -42,7 +42,7 @@ type Cruncher struct {
 	thread    chan int
 	Abort     bool // set to true to abort processing
 	timeout   time.Duration
-	timedout  bool
+	timedOut  bool
 }
 
 // Pair struct
@@ -219,13 +219,13 @@ func (c *Cruncher) Find(cb func(match Pair)) {
 			}
 			select {
 			case <-t.C:
-				c.timedout = true
+				c.timedOut = true
 				c.Abort = true
 			default:
 			}
 		}(t)
 		if c.Abort {
-			if c.timedout {
+			if c.timedOut {
 				fmt.Printf("Timed out after %v\n", c.timeout)
 			} else {
 				if !t.Stop() {

@@ -107,8 +107,8 @@ func IsRegex(s string) bool {
 }
 
 // invalidRegexMsg returns an error message how the regex is invalid
-func invalidRegexMsg(s string, errmsg string) string {
-	return fmt.Sprintf("\n\"%s\" is an invalid regular expression\n%s", s, errmsg)
+func invalidRegexMsg(s string, errMsg string) string {
+	return fmt.Sprintf("\n\"%s\" is an invalid regular expression\n%s", s, errMsg)
 }
 
 // IsValidRegex checks the regex has any chance of matching a key
