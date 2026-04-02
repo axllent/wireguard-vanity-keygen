@@ -1,6 +1,7 @@
 package keygen
 
 import (
+	"encoding/base64"
 	"math"
 	"runtime"
 	"sync"
@@ -27,8 +28,9 @@ func BenchmarkCrunchThroughput(b *testing.B) {
 	c.WordMap["zzzz"] = &AtomicCounter{Value: math.MaxInt64}
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
+		buf := make([]byte, base64.StdEncoding.EncodedLen(KeySize)) // one per goroutine
 		for pb.Next() {
-			c.crunch(func(Pair) {})
+			c.crunch(func(Pair) {}, buf)
 		}
 	})
 }

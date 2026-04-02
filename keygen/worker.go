@@ -1,12 +1,14 @@
 package keygen
 
 import (
+	"encoding/base64"
 	"fmt"
 	"regexp"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+	"unsafe"
 )
 
 // Options struct
@@ -61,19 +63,29 @@ func New(options Options, timeout time.Duration) *Cruncher {
 	}
 }
 
-// Crunch will generate a new key and compare to the search(s)
-func (c *Cruncher) crunch(cb func(match Pair)) bool {
+// Crunch will generate a new key and compare to the search(s).
+// buf is a caller-owned scratch buffer of length base64.StdEncoding.EncodedLen(KeySize);
+// passing it in avoids a heap allocation per call.
+func (c *Cruncher) crunch(cb func(match Pair), buf []byte) bool {
 	k, err := newPrivateKey()
 	if err != nil {
 		panic(err)
 	}
 
-	pub := k.Public().String()
-	matchKey := pub
+	pubKey := k.Public()
+	base64.StdEncoding.Encode(buf, pubKey[:])
 
 	if !c.CaseSensitive {
-		matchKey = strings.ToLower(pub)
+		for i, b := range buf {
+			if b >= 'A' && b <= 'Z' {
+				buf[i] = b + 32
+			}
+		}
 	}
+
+	// Zero-alloc string view of buf; safe because buf outlives this function
+	// and matchKey is never stored beyond this call.
+	matchKey := unsafe.String(unsafe.SliceData(buf), len(buf))
 
 	completed := true
 
@@ -84,7 +96,7 @@ func (c *Cruncher) crunch(cb func(match Pair)) bool {
 		completed = false
 		if strings.HasPrefix(matchKey, w) {
 			if counter.Dec() >= 0 {
-				cb(Pair{Private: k.String(), Public: pub})
+				cb(Pair{Private: k.String(), Public: base64.StdEncoding.EncodeToString(pubKey[:])})
 			}
 		}
 	}
@@ -96,7 +108,7 @@ func (c *Cruncher) crunch(cb func(match Pair)) bool {
 		completed = false
 		if w.MatchString(matchKey) {
 			if counter.Dec() >= 0 {
-				cb(Pair{Private: k.String(), Public: pub})
+				cb(Pair{Private: k.String(), Public: base64.StdEncoding.EncodeToString(pubKey[:])})
 			}
 		}
 	}
@@ -117,6 +129,7 @@ func (c *Cruncher) CalculateSpeed() (int64, time.Duration) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			buf := make([]byte, base64.StdEncoding.EncodedLen(KeySize))
 			for {
 				select {
 				case <-done:
@@ -128,7 +141,14 @@ func (c *Cruncher) CalculateSpeed() (int64, time.Duration) {
 					panic(err)
 				}
 				_ = k.String()
-				t := strings.ToLower(k.Public().String())
+				pubKey := k.Public()
+				base64.StdEncoding.Encode(buf, pubKey[:])
+				for i, b := range buf {
+					if b >= 'A' && b <= 'Z' {
+						buf[i] = b + 32
+					}
+				}
+				t := unsafe.String(unsafe.SliceData(buf), len(buf))
 				for w := range c.WordMap {
 					_ = strings.HasPrefix(t, w)
 				}
@@ -194,8 +214,9 @@ func (c *Cruncher) Find(cb func(match Pair)) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
+				buf := make([]byte, base64.StdEncoding.EncodedLen(KeySize))
 				for !c.Abort {
-					if c.crunch(cb) {
+					if c.crunch(cb, buf) {
 						c.Abort = true
 						return
 					}
@@ -213,8 +234,9 @@ func (c *Cruncher) Find(cb func(match Pair)) {
 		wg.Add(1)
 		go func(t *time.Timer) {
 			defer wg.Done()
+			buf := make([]byte, base64.StdEncoding.EncodedLen(KeySize))
 			for !c.Abort {
-				if c.crunch(cb) {
+				if c.crunch(cb, buf) {
 					c.Abort = true
 					return
 				}
