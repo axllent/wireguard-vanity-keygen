@@ -1,3 +1,4 @@
+// Package main is the main package for the WireGuard Vanity Key Generator application.
 package main
 
 import (
@@ -8,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/axllent/ghru/v2"
 	"github.com/axllent/wireguard-vanity-keygen/keygen"
 	"github.com/spf13/pflag"
 )
@@ -15,6 +17,12 @@ import (
 var (
 	options    keygen.Options
 	appVersion = "dev"
+	ghruConf   = ghru.Config{
+		Repo:           "axllent/wireguard-vanity-keygen",
+		ArchiveName:    "wireguard-vanity-keygen-{{.OS}}-{{.Arch}}",
+		BinaryName:     "wireguard-vanity-keygen",
+		CurrentVersion: appVersion,
+	}
 )
 
 func main() {
@@ -41,15 +49,44 @@ func main() {
 		os.Exit(0)
 	}
 
-	var summary bool
+	var summary, showVersion, update bool
 	flag.BoolVarP(&summary, "summary", "s", false, "print results when all are found (default false)")
 	flag.BoolVarP(&options.CaseSensitive, "case-sensitive", "c", false, "case sensitive match (default false)")
 	flag.IntVarP(&options.Threads, "threads", "t", options.Cores, "threads")
 	flag.IntVarP(&options.LimitResults, "limit", "l", 1, "limit results to n (exists after)")
 	flag.StringVarP(&options.Timeout, "timeout", "T", "", "quit after n minutes (allowed suffixes: s/m/h) (default \"\")")
+	flag.BoolVarP(&showVersion, "version", "v", false, "show app version")
+	flag.BoolVarP(&update, "update", "u", false, "update to latest release")
 
 	flag.Parse(os.Args[1:])
 	args := flag.Args()
+
+	if showVersion {
+		fmt.Printf("Version: %s\n", appVersion)
+		release, err := ghruConf.Latest()
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+		if release.Tag != appVersion {
+			fmt.Printf(
+				"Update available: %s\nRun `%s -u` to update (requires read/write access to install directory).\n",
+				release.Tag,
+				os.Args[0],
+			)
+		}
+		os.Exit(0)
+	}
+
+	if update {
+		rel, err := ghruConf.SelfUpdate()
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+		fmt.Printf("Updated %s to version %s\n", os.Args[0], rel.Tag)
+		os.Exit(0)
+	}
 
 	if len(args) < 1 {
 		flag.Usage()
