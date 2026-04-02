@@ -1,5 +1,7 @@
 # WireGuard vanity keygen
 
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/axllent/wireguard-vanity-keygen?style=flat-square)](https://github.com/axllent/wireguard-vanity-keygen/releases/latest)
+[![Tests](https://github.com/axllent/wireguard-vanity-keygen/actions/workflows/tests.yml/badge.svg)](https://github.com/axllent/wireguard-vanity-keygen/actions/workflows/tests.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/axllent/wireguard-vanity-keygen)](https://goreportcard.com/report/github.com/axllent/wireguard-vanity-keygen)
 
 A command-line vanity (public) key generator for [WireGuard](https://www.wireguard.com/). By default, it only matches the prefix of generated public keys,
