@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -39,7 +40,6 @@ type Cruncher struct {
 	Options
 	WordMap   map[string]*AtomicCounter
 	RegexpMap map[*regexp.Regexp]*AtomicCounter
-	thread    chan int
 	Abort     bool // set to true to abort processing
 	timeout   time.Duration
 	timedOut  bool
@@ -57,7 +57,6 @@ func New(options Options, timeout time.Duration) *Cruncher {
 		Options:   options,
 		WordMap:   make(map[string]*AtomicCounter),
 		RegexpMap: make(map[*regexp.Regexp]*AtomicCounter),
-		thread:    make(chan int, options.Cores),
 		timeout:   timeout,
 	}
 }
@@ -102,7 +101,6 @@ func (c *Cruncher) crunch(cb func(match Pair)) bool {
 		}
 	}
 
-	<-c.thread // removes an int from threads, allowing another to proceed
 	return completed
 }
 
@@ -110,45 +108,46 @@ func (c *Cruncher) crunch(cb func(match Pair)) bool {
 // on the time per run taken from 2 seconds runtime.
 func (c *Cruncher) CalculateSpeed() (int64, time.Duration) {
 	var n int64
-	n = 1
+	atomic.StoreInt64(&n, 1)
 	start := time.Now()
+	done := make(chan struct{})
+	var wg sync.WaitGroup
 
-	for loopStart := time.Now(); ; {
-		// check every 100 loops if time is reached
-		if n%100 == 0 {
-			if time.Since(loopStart) > 2*time.Second {
-				break
-			}
-		}
-
-		c.thread <- 1 // will block if there is MAX ints in threads
+	for i := 0; i < c.Cores; i++ {
+		wg.Add(1)
 		go func() {
-			// dry run
-			k, err := newPrivateKey()
-			if err != nil {
-				panic(err)
+			defer wg.Done()
+			for {
+				select {
+				case <-done:
+					return
+				default:
+				}
+				k, err := newPrivateKey()
+				if err != nil {
+					panic(err)
+				}
+				_ = k.String()
+				t := strings.ToLower(k.Public().String())
+				for w := range c.WordMap {
+					_ = strings.HasPrefix(t, w)
+				}
+				for w := range c.RegexpMap {
+					_ = w.MatchString(t)
+				}
+				atomic.AddInt64(&n, 1)
 			}
-			_ = k.String()
-			t := strings.ToLower(k.Public().String())
-
-			// Allow only one routine at a time to avoid
-			// "concurrent map iteration and map write"
-			for w := range c.WordMap {
-				_ = strings.HasPrefix(t, w)
-			}
-
-			for w := range c.RegexpMap {
-				_ = w.MatchString(t)
-			}
-
-			<-c.thread // removes an int from threads, allowing another to proceed
-			n++
 		}()
 	}
 
-	estimate64 := int64(time.Since(start)) / n
+	time.Sleep(2 * time.Second)
+	close(done)
+	wg.Wait()
 
-	return n / 2, time.Duration(estimate64)
+	total := atomic.LoadInt64(&n)
+	elapsed := time.Since(start)
+	estimate := time.Duration(int64(elapsed) / total)
+	return total / 2, estimate
 }
 
 // CalculateProbability calculates the probability that a string
@@ -188,51 +187,50 @@ func (c *Cruncher) CollectToSlice() []Pair {
 
 // Find will invoke a callback function for each match to support some interactivity or at least feedback
 func (c *Cruncher) Find(cb func(match Pair)) {
+	var wg sync.WaitGroup
 
 	if c.timeout == time.Duration(0) {
-		// If you change anything in this for block, make the corresponding change in
-		// the timeout-aware for block below this one.
-		for {
-			c.thread <- 1 // will block if there is MAX ints in threads
+		for i := 0; i < c.Cores; i++ {
+			wg.Add(1)
 			go func() {
-				if c.crunch(cb) {
-					c.Abort = true
+				defer wg.Done()
+				for !c.Abort {
+					if c.crunch(cb) {
+						c.Abort = true
+						return
+					}
 				}
 			}()
-			if c.Abort {
-				return
-			}
 		}
+		wg.Wait()
+		return
 	}
 
 	t := time.NewTimer(c.timeout)
+	defer t.Stop()
 
-	// This is same code as immediately above, with only the timeout logic added.
-	// Since the code is simple enough, let's duplicate it, so we don't slow down
-	// the calculations with unnecessary logic, if the user didn't specify a timeout.
-	for {
-		c.thread <- 1 // will block if there is MAX ints in threads
+	for i := 0; i < c.Cores; i++ {
+		wg.Add(1)
 		go func(t *time.Timer) {
-			if c.crunch(cb) {
-				c.Abort = true
-				return
-			}
-			select {
-			case <-t.C:
-				c.timedOut = true
-				c.Abort = true
-			default:
-			}
-		}(t)
-		if c.Abort {
-			if c.timedOut {
-				fmt.Printf("Timed out after %v\n", c.timeout)
-			} else {
-				if !t.Stop() {
-					<-t.C
+			defer wg.Done()
+			for !c.Abort {
+				if c.crunch(cb) {
+					c.Abort = true
+					return
+				}
+				select {
+				case <-t.C:
+					c.timedOut = true
+					c.Abort = true
+					return
+				default:
 				}
 			}
-			return
-		}
+		}(t)
+	}
+	wg.Wait()
+
+	if c.timedOut {
+		fmt.Printf("Timed out after %v\n", c.timeout)
 	}
 }
