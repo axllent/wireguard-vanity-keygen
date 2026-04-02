@@ -1,0 +1,21 @@
+name: Tests
+
+on:
+  push:
+    branches: [develop, "feature/**"]
+  pull_request:
+    branches: [develop, "feature/**"]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Run tests
+        run: go test ./... -v
