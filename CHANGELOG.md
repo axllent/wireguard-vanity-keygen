@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.0]
+
+- Optimize key generation by reusing buffers to reduce heap allocations
+- Add comprehensive unit tests for key generation and utility functions
+- Add GitHub Actions workflow for automated testing on push and pull requests
+- Update Go to 1.25.0
+- Add `-v` / `--version` flag to display current version and check for updates
+- Add `-u` / `--update` flag to self-update to the latest release
+
 ## [0.1.3]
 
 - Switch to `github.com/oasisprotocol/curve25519-voi` for a ~18% speed improvement
