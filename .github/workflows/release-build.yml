@@ -4,8 +4,22 @@ on:
 
 name: Build & release
 jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Run tests
+        run: go test ./... -v
+
   releases-matrix:
     name: Build
+    needs: test
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -19,19 +33,19 @@ jobs:
           - goarch: arm
             goos: windows
     steps:
-    - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
-    # build the binaries
-    - uses: wangyoucao577/go-release-action@v1.55
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        goos: ${{ matrix.goos }}
-        goarch: ${{ matrix.goarch }}
-        binary_name: "wireguard-vanity-keygen"
-        pre_command: export CGO_ENABLED=0
-        asset_name: wireguard-vanity-keygen-${{ matrix.goos }}-${{ matrix.goarch }}
-        extra_files: LICENSE README.md
-        md5sum: false
-        overwrite: true
-        retry: 5
-        ldflags: -w -X "main.appVersion=${{ github.ref_name }}"
+      # build the binaries
+      - uses: wangyoucao577/go-release-action@v1.55
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          goos: ${{ matrix.goos }}
+          goarch: ${{ matrix.goarch }}
+          binary_name: "wireguard-vanity-keygen"
+          pre_command: export CGO_ENABLED=0
+          asset_name: wireguard-vanity-keygen-${{ matrix.goos }}-${{ matrix.goarch }}
+          extra_files: LICENSE README.md
+          md5sum: false
+          overwrite: true
+          retry: 5
+          ldflags: -w -X "main.appVersion=${{ github.ref_name }}"

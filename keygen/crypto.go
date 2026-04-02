@@ -38,8 +38,11 @@ func (k *PrivateKey) Public() Key {
 	var pub curve25519voi.MontgomeryPoint
 	base := *curve25519voi.X25519_BASEPOINT
 	s, err := scalar.NewFromBytesModOrder(k[:])
-	if err != nil || s == nil {
+	if err != nil {
 		panic("invalid private key for scalar.NewFromBytesModOrder: " + err.Error())
+	}
+	if s == nil {
+		panic("invalid private key for scalar.NewFromBytesModOrder: nil scalar")
 	}
 	pub.Mul(&base, s)
 	return Key(pub)
