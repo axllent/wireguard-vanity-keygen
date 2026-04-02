@@ -42,9 +42,9 @@ type Cruncher struct {
 	Options
 	WordMap   map[string]*AtomicCounter
 	RegexpMap map[*regexp.Regexp]*AtomicCounter
-	Abort     bool // set to true to abort processing
+	Abort     atomic.Bool // set to true to abort processing
 	timeout   time.Duration
-	timedOut  bool
+	timedOut  atomic.Bool
 }
 
 // Pair struct
@@ -215,9 +215,9 @@ func (c *Cruncher) Find(cb func(match Pair)) {
 			go func() {
 				defer wg.Done()
 				buf := make([]byte, base64.StdEncoding.EncodedLen(KeySize))
-				for !c.Abort {
+				for !c.Abort.Load() {
 					if c.crunch(cb, buf) {
-						c.Abort = true
+						c.Abort.Store(true)
 						return
 					}
 				}
@@ -235,15 +235,15 @@ func (c *Cruncher) Find(cb func(match Pair)) {
 		go func(t *time.Timer) {
 			defer wg.Done()
 			buf := make([]byte, base64.StdEncoding.EncodedLen(KeySize))
-			for !c.Abort {
+			for !c.Abort.Load() {
 				if c.crunch(cb, buf) {
-					c.Abort = true
+					c.Abort.Store(true)
 					return
 				}
 				select {
 				case <-t.C:
-					c.timedOut = true
-					c.Abort = true
+					c.timedOut.Store(true)
+					c.Abort.Store(true)
 					return
 				default:
 				}
@@ -252,7 +252,7 @@ func (c *Cruncher) Find(cb func(match Pair)) {
 	}
 	wg.Wait()
 
-	if c.timedOut {
+	if c.timedOut.Load() {
 		fmt.Printf("Timed out after %v\n", c.timeout)
 	}
 }
