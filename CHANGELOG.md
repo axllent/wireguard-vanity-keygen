@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.1]
+
+- Add `--json` / `-j` flag to write results to a JSON file (#45)
+- Update Go dependencies
+
 ## [1.0.0]
 
 - Optimize key generation by reusing buffers to reduce heap allocations
