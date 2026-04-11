@@ -2,8 +2,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
@@ -50,11 +52,13 @@ func main() {
 	}
 
 	var summary, showVersion, update bool
+	var jsonFile string
 	flag.BoolVarP(&summary, "summary", "s", false, "print results when all are found (default false)")
 	flag.BoolVarP(&options.CaseSensitive, "case-sensitive", "c", false, "case sensitive match (default false)")
 	flag.IntVarP(&options.Threads, "threads", "t", options.Cores, "threads")
 	flag.IntVarP(&options.LimitResults, "limit", "l", 1, "limit results to n (exists after)")
 	flag.StringVarP(&options.Timeout, "timeout", "T", "", "quit after n minutes (allowed suffixes: s/m/h) (default \"\")")
+	flag.StringVarP(&jsonFile, "json", "j", "", "write results to JSON file")
 	flag.BoolVarP(&showVersion, "version", "v", false, "show app version")
 	flag.BoolVarP(&update, "update", "u", false, "update to latest release")
 
@@ -174,14 +178,36 @@ func main() {
 	}
 
 	fmt.Printf("\nPress Ctrl-c to cancel\n\n")
-	if !summary {
+
+	var results []keygen.Pair
+	if !summary && jsonFile == "" {
 		c.Find(func(match keygen.Pair) {
 			fmt.Printf("private: %s   public: %s\n", match.Private, match.Public)
 		})
 	} else {
-		for _, match := range c.CollectToSlice() {
+		results = c.CollectToSlice()
+		for _, match := range results {
 			fmt.Printf("private: %s   public: %s\n", match.Private, match.Public)
 		}
+	}
+
+	if jsonFile != "" {
+		jsonFile = filepath.Clean(jsonFile)
+		if results == nil {
+			results = []keygen.Pair{}
+		}
+		data, err := json.MarshalIndent(struct {
+			Results []keygen.Pair `json:"results"`
+		}{Results: results}, "", "  ")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error encoding JSON: %v\n", err)
+			os.Exit(1)
+		}
+		if err := os.WriteFile(jsonFile, data, 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "Error writing JSON file: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("\nResults written to %s\n", jsonFile)
 	}
 }
 

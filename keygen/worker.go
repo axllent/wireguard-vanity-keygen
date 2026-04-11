@@ -49,8 +49,8 @@ type Cruncher struct {
 
 // Pair struct
 type Pair struct {
-	Private string
-	Public  string
+	Private string `json:"private"`
+	Public  string `json:"public"`
 }
 
 // New returns a Cruncher
