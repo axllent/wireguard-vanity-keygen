@@ -17,6 +17,7 @@ and not whether the search matches anywhere in the public key. The concept is ba
 - Search multiple prefixes at once
 - Exit after results limit reached (defaults to 1)
 - Displays probability and estimated runtime based on quick benchmark
+- Optional JSON output of results to file
 
 ## Usage options
 
@@ -24,9 +25,14 @@ and not whether the search matches anywhere in the public key. The concept is ba
 Usage: wireguard-vanity-keygen [OPTIONS] <SEARCH> [<SEARCH>...]
 
 Options:
+  -s, --summary          print results when all are found (default false)
   -c, --case-sensitive   case sensitive match (default false)
-  -t, --threads int      threads (defaults to all available cores minus 1)
+  -t, --threads int      threads (default 3)
   -l, --limit int        limit results to n (exists after) (default 1)
+  -T, --timeout string   quit after n minutes (allowed suffixes: s/m/h) (default "")
+  -j, --json string      write results to JSON file
+  -v, --version          show app version
+  -u, --update           update to latest release
 ```
 
 ## Example
