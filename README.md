@@ -96,7 +96,7 @@ reduce the time considerably. Here are some examples:
 1. `.*word.*` - find word anywhere in the key (`word.*` and `.*word` will also work)
 2. `^.{0,10}word` - find word anywhere in the first 10 letters of the key
 3. `word1.*word2` - find two words, anywhere in the key
-4. `^[s5][o0][ll]ar` - find 'solar', or the visually similar 's01ar`, at the beginning of the key
+4. `^[s5][o0][l1]ar` - find 'solar', or the visually similar 's01ar`, at the beginning of the key
 5. `^(best|next)[/+]` - find 'best', or the 'next' best, at the beginning of the key, with `/` or `+` as a delimiter
 
 A good guide on Go's regular expression syntax is at https://pkg.go.dev/regexp/syntax.
